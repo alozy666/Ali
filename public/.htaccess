@@ -1,0 +1,24 @@
+# توجيه كل الطلبات لـ index.php ما لم يكن الملف موجوداً فعلاً
+RewriteEngine On
+
+# فرض HTTPS (قسم ٩: تشفير أثناء النقل إلزامي على كل اتصال)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# منع تصفح المجلدات
+Options -Indexes
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+</IfModule>
+
+# حجب أي ملف حسّاس لو وُضع بالجذر بالخطأ
+<FilesMatch "\.(sql|env|key|log|md)$">
+    Require all denied
+</FilesMatch>

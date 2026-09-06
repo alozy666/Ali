@@ -1,0 +1,18 @@
+/vendor/
+/node_modules/
+/web/dist/
+
+# إعدادات الإنتاج والأسرار — لا تُرفع أبداً
+/app/config/config.php
+/app/config/*.key
+.env
+
+# ملفات وقت التشغيل
+/app/storage/audio/*
+!/app/storage/audio/.gitkeep
+/app/storage/logs/*
+!/app/storage/logs/.gitkeep
+/app/storage/backups/*
+!/app/storage/backups/.gitkeep
+
+.DS_Store

@@ -172,6 +172,56 @@ check(
 check('ولم تُنشأ عقدة ثانية', $lateStore->entityCount(), 1);
 
 // ═══════════════════════════════════════════════════════════════════════
+section('النموذج ثنائي الزمن — الحقيقة تُنسخ ولا تُمحى');
+
+$biStore = new FakeGraphStore();
+$biResolver = new EntityResolver($biStore);
+
+// المدخل الخام ٧ يذكر أن علياً يعمل بمشروع «ناشر»
+$person = $biResolver->resolve('علي', 'person', [], [], 7);
+$projectA = $biResolver->resolve('ناشر', 'project', [], [], 7);
+
+check('العقدة تحفظ مصدرها الخام', $biStore->episodeOf($person->entityId ?? 0), 7);
+
+$biStore->addEdge($person->entityId ?? 0, 'belongs_to', $projectA->entityId ?? 0, [], 7);
+
+$active = $biStore->edgesOf($person->entityId ?? 0);
+check('العلاقة قائمة بعد إثباتها', count($active), 1);
+check('العلاقة تحفظ مصدرها', $active[0]['episode_id'], 7);
+check('العلاقة القائمة بلا تاريخ إبطال', $active[0]['valid_until'], null);
+
+// لاحقاً — المدخل ٩ يكشف أنه ترك المشروع
+$invalidated = $biStore->invalidateEdge(
+    $person->entityId ?? 0,
+    'belongs_to',
+    $projectA->entityId ?? 0,
+    9
+);
+check('الإبطال نجح', $invalidated, true);
+check('اختفت من الاسترجاع الافتراضي', count($biStore->edgesOf($person->entityId ?? 0)), 0);
+check(
+    'لكنها لم تُحذف — تظهر بالمراجعة',
+    count($biStore->edgesOf($person->entityId ?? 0, true)),
+    1
+);
+
+// إبطال ما هو مُبطَل أصلاً لا يغيّر شيئاً (آمن عند التكرار)
+check(
+    'إبطال المُبطَل يرجع false',
+    $biStore->invalidateEdge($person->entityId ?? 0, 'belongs_to', $projectA->entityId ?? 0, 9),
+    false
+);
+
+// إعادة التأكيد تستعيد العلاقة — ذكرها من جديد تأكيد لصحتها
+$biStore->addEdge($person->entityId ?? 0, 'belongs_to', $projectA->entityId ?? 0, [], 11);
+check(
+    'إعادة التأكيد تستعيد العلاقة',
+    count($biStore->edgesOf($person->entityId ?? 0)),
+    1
+);
+check('ولا تُنشئ صفاً مكرراً', count($biStore->edges()), 1);
+
+// ═══════════════════════════════════════════════════════════════════════
 section('قراءة رد النموذج — التسامح مع مخرجات غير نظيفة');
 
 // النماذج تخالف تعليمة «JSON فقط» أحياناً. التعامل مع هذا مرة واحدة بمكان

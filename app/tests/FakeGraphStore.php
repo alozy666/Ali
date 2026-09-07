@@ -22,8 +22,11 @@ final class FakeGraphStore implements GraphStore
     /** @var array<string,list<int>> */
     private array $aliases = [];
 
-    /** @var list<array{src:int,rel:string,dst:int}> */
+    /** @var list<array{src:int,rel:string,dst:int,valid_until:string|null,episode_id:int|null}> */
     private array $edges = [];
+
+    /** @var array<int,int|null> */
+    private array $entityEpisodes = [];
 
     /** @var list<int> */
     public array $touched = [];
@@ -33,16 +36,27 @@ final class FakeGraphStore implements GraphStore
         return $this->aliases[$aliasNorm] ?? [];
     }
 
-    public function createEntity(string $type, string $canonicalName, array $attrs = [], string $searchText = ''): int
-    {
+    public function createEntity(
+        string $type,
+        string $canonicalName,
+        array $attrs = [],
+        string $searchText = '',
+        ?int $episodeId = null,
+    ): int {
         $id = $this->nextId++;
         $this->entities[$id] = [
             'id' => $id,
             'type' => $type,
             'canonical_name' => $canonicalName,
         ];
+        $this->entityEpisodes[$id] = $episodeId;
 
         return $id;
+    }
+
+    public function episodeOf(int $entityId): ?int
+    {
+        return $this->entityEpisodes[$entityId] ?? null;
     }
 
     public function addAlias(int $entityId, string $alias, string $aliasNorm, string $lang): void
@@ -74,9 +88,81 @@ final class FakeGraphStore implements GraphStore
         return $found;
     }
 
-    public function addEdge(int $srcId, string $relType, int $dstId, array $attrs = []): void
+    public function addEdge(
+        int $srcId,
+        string $relType,
+        int $dstId,
+        array $attrs = [],
+        ?int $episodeId = null,
+    ): void {
+        if ($srcId === $dstId) {
+            return;
+        }
+
+        // يحاكي ON DUPLICATE KEY بـ MySQL: صف واحد لكل ثلاثية، وإعادة
+        // التأكيد تستعيد العلاقة المُبطَلة
+        foreach ($this->edges as $i => $edge) {
+            if ($edge['src'] === $srcId && $edge['rel'] === $relType && $edge['dst'] === $dstId) {
+                $this->edges[$i]['valid_until'] = null;
+                return;
+            }
+        }
+
+        $this->edges[] = [
+            'src' => $srcId,
+            'rel' => $relType,
+            'dst' => $dstId,
+            'valid_until' => null,
+            'episode_id' => $episodeId,
+        ];
+    }
+
+    public function invalidateEdge(
+        int $srcId,
+        string $relType,
+        int $dstId,
+        ?int $byEpisodeId = null,
+    ): bool {
+        foreach ($this->edges as $i => $edge) {
+            if ($edge['src'] !== $srcId || $edge['rel'] !== $relType || $edge['dst'] !== $dstId) {
+                continue;
+            }
+
+            if ($edge['valid_until'] !== null) {
+                return false; // مُبطَلة أصلاً
+            }
+
+            $this->edges[$i]['valid_until'] = date('Y-m-d H:i:s');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function edgesOf(int $entityId, bool $includeInvalidated = false): array
     {
-        $this->edges[] = ['src' => $srcId, 'rel' => $relType, 'dst' => $dstId];
+        $found = [];
+
+        foreach ($this->edges as $edge) {
+            if ($edge['src'] !== $entityId && $edge['dst'] !== $entityId) {
+                continue;
+            }
+
+            if (!$includeInvalidated && $edge['valid_until'] !== null) {
+                continue;
+            }
+
+            $found[] = [
+                'src_id' => $edge['src'],
+                'rel_type' => $edge['rel'],
+                'dst_id' => $edge['dst'],
+                'valid_until' => $edge['valid_until'],
+                'episode_id' => $edge['episode_id'],
+            ];
+        }
+
+        return $found;
     }
 
     public function touchEntity(int $id): void
@@ -89,7 +175,7 @@ final class FakeGraphStore implements GraphStore
         return count($this->entities);
     }
 
-    /** @return list<array{src:int,rel:string,dst:int}> */
+    /** @return list<array{src:int,rel:string,dst:int,valid_until:string|null,episode_id:int|null}> */
     public function edges(): array
     {
         return $this->edges;

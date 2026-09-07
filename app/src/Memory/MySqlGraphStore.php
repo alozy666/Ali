@@ -34,11 +34,16 @@ final class MySqlGraphStore implements GraphStore
         return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
-    public function createEntity(string $type, string $canonicalName, array $attrs = [], string $searchText = ''): int
-    {
+    public function createEntity(
+        string $type,
+        string $canonicalName,
+        array $attrs = [],
+        string $searchText = '',
+        ?int $episodeId = null,
+    ): int {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO entities (type, canonical_name, attrs, search_text)
-             VALUES (?, ?, ?, ?)'
+            'INSERT INTO entities (type, canonical_name, attrs, search_text, episode_id)
+             VALUES (?, ?, ?, ?, ?)'
         );
 
         $stmt->execute([
@@ -46,6 +51,7 @@ final class MySqlGraphStore implements GraphStore
             $canonicalName,
             $attrs === [] ? null : self::encodeJson($attrs),
             $searchText,
+            $episodeId,
         ]);
 
         return (int) $this->pdo->lastInsertId();
@@ -90,25 +96,82 @@ final class MySqlGraphStore implements GraphStore
         return array_map(self::castEntity(...), $stmt->fetchAll());
     }
 
-    public function addEdge(int $srcId, string $relType, int $dstId, array $attrs = []): void
-    {
+    public function addEdge(
+        int $srcId,
+        string $relType,
+        int $dstId,
+        array $attrs = [],
+        ?int $episodeId = null,
+    ): void {
         if ($srcId === $dstId) {
             return; // حلقة ذاتية بلا معنى دلالي
         }
 
+        // `valid_from = NOW()` هو أفضل تقدير متاح: نعرف متى **علمنا** بالحقيقة،
+        // لا متى صارت صحيحة بالواقع. العمود يقبل تاريخاً أدق لاحقاً لو استُخرج
+        // من النص («من السنة الماضية»)، وهذي قدرة مؤجّلة لا مفقودة.
+        //
+        // عند التكرار: الوزن يتراكم، والعلاقة **تُستعاد** لو كانت مُبطَلة —
+        // فذكرها من جديد تأكيد لصحتها.
         $stmt = $this->pdo->prepare(
-            'INSERT INTO edges (src_id, rel_type, dst_id, attrs)
-             VALUES (?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE weight = weight + 0.1'
+            'INSERT INTO edges (src_id, rel_type, dst_id, attrs, episode_id, valid_from)
+             VALUES (?, ?, ?, ?, ?, NOW())
+             ON DUPLICATE KEY UPDATE
+                 weight         = weight + 0.1,
+                 valid_until    = NULL,
+                 invalidated_by = NULL'
         );
 
-        // تكرار ذكر نفس العلاقة يقوّي وزنها بدل أن يُهمَل — إشارة أن الرابط حقيقي
         $stmt->execute([
             $srcId,
             $relType,
             $dstId,
             $attrs === [] ? null : self::encodeJson($attrs),
+            $episodeId,
         ]);
+    }
+
+    public function invalidateEdge(
+        int $srcId,
+        string $relType,
+        int $dstId,
+        ?int $byEpisodeId = null,
+    ): bool {
+        // الشرط `valid_until IS NULL` يجعل العملية مُتكرِّرة الاستدعاء بأمان:
+        // إبطال ما هو مُبطَل أصلاً لا يغيّر تاريخ الإبطال الأول.
+        $stmt = $this->pdo->prepare(
+            'UPDATE edges
+             SET valid_until = NOW(), invalidated_by = ?
+             WHERE src_id = ? AND rel_type = ? AND dst_id = ? AND valid_until IS NULL'
+        );
+
+        $stmt->execute([$byEpisodeId, $srcId, $relType, $dstId]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+    public function edgesOf(int $entityId, bool $includeInvalidated = false): array
+    {
+        $filter = $includeInvalidated ? '' : ' AND valid_until IS NULL';
+
+        $stmt = $this->pdo->prepare(
+            "SELECT src_id, rel_type, dst_id, valid_until, episode_id
+             FROM edges
+             WHERE (src_id = ? OR dst_id = ?){$filter}
+             ORDER BY id ASC"
+        );
+        $stmt->execute([$entityId, $entityId]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'src_id' => (int) $row['src_id'],
+                'rel_type' => (string) $row['rel_type'],
+                'dst_id' => (int) $row['dst_id'],
+                'valid_until' => $row['valid_until'] === null ? null : (string) $row['valid_until'],
+                'episode_id' => $row['episode_id'] === null ? null : (int) $row['episode_id'],
+            ],
+            $stmt->fetchAll()
+        );
     }
 
     public function touchEntity(int $id): void

@@ -109,7 +109,7 @@ final class ExtractEntitiesHandler implements JobHandler
         }
 
         $entityIds = $this->persistEntities($parsed['entities'] ?? [], $rawId);
-        $this->persistRelations($parsed['relations'] ?? [], $entityIds);
+        $this->persistRelations($parsed['relations'] ?? [], $entityIds, $rawId);
 
         $done = $this->pdo->prepare('UPDATE raw_inputs SET processed_at = NOW() WHERE id = ?');
         $done->execute([$rawId]);
@@ -147,7 +147,8 @@ final class ExtractEntitiesHandler implements JobHandler
                 static fn (string $a): bool => $a !== ''
             ));
 
-            $resolution = $this->resolver->resolve($name, $type, $aliases);
+            // تمرير المدخل الخام كمصدر: كل عقدة تعرف من أين جاءت (قسم ٢٠)
+            $resolution = $this->resolver->resolve($name, $type, $aliases, [], $rawId);
 
             if ($resolution->status === ResolutionStatus::Ambiguous) {
                 // لا يخمّن ولا يُنشئ عقدة على أمل. الغموض قرار له، لا للنظام
@@ -177,8 +178,9 @@ final class ExtractEntitiesHandler implements JobHandler
     /**
      * @param mixed $relations
      * @param array<int,int> $entityIds
+     * @param int $episodeId المدخل الخام الذي أثبت هذي العلاقات
      */
-    private function persistRelations(mixed $relations, array $entityIds): void
+    private function persistRelations(mixed $relations, array $entityIds, int $episodeId): void
     {
         if (!is_array($relations)) {
             return;
@@ -199,7 +201,7 @@ final class ExtractEntitiesHandler implements JobHandler
                 continue;
             }
 
-            $this->store->addEdge($from, $type, $to);
+            $this->store->addEdge($from, $type, $to, [], $episodeId);
         }
     }
 

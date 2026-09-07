@@ -99,11 +99,23 @@ final class Retriever
      * دورة (وهي طبيعية هنا: شخص ← مشروع ← قرار ← نفس الشخص) تتوسع بلا نهاية
      * دون هذا الحد.
      *
+     * **النموذج ثنائي الزمن:** الاسترجاع الافتراضي يعبر العلاقات **القائمة**
+     * فقط. العلاقة المُبطَلة تختفي من الجوار بلا أن تُحذف — فلا يبني النظام
+     * قراراً على حقيقة يعرف أنها بطلت.
+     *
+     * @param string|null $asOf لقطة زمنية (`Y-m-d H:i:s`): ما كانت الشبكة عليه
+     *                          بذلك التاريخ. يخدم مراجعة دقة التوقعات (قسم ٣٠)
+     *                          — «على أي معلومات بنيتُ قراري وقتها؟»
+     *
      * @param list<int> $seedIds
      * @return list<array{id:int,type:string,canonical_name:string,depth:int}>
      */
-    public function neighborhood(array $seedIds, int $depth = self::MAX_DEPTH, int $limit = 40): array
-    {
+    public function neighborhood(
+        array $seedIds,
+        int $depth = self::MAX_DEPTH,
+        int $limit = 40,
+        ?string $asOf = null,
+    ): array {
         if ($seedIds === []) {
             return [];
         }
@@ -111,6 +123,15 @@ final class Retriever
         $depth = max(1, min($depth, self::MAX_DEPTH));
         $limit = max(1, min($limit, 200));
         $placeholders = implode(',', array_fill(0, count($seedIds), '?'));
+
+        if ($asOf === null) {
+            $temporal = 'e.valid_until IS NULL';
+            $temporalParams = [];
+        } else {
+            $temporal = '(e.valid_from IS NULL OR e.valid_from <= ?)'
+                . ' AND (e.valid_until IS NULL OR e.valid_until > ?)';
+            $temporalParams = [$asOf, $asOf];
+        }
 
         // CAST بالجزء غير التكراري ضروري: MySQL يشتق نوع عمود الـ CTE من أول
         // SELECT، وبدون تحديد صريح قد يُقتطع المعرّف عند القيم الكبيرة.
@@ -126,7 +147,9 @@ final class Retriever
                     CAST(IF(e.src_id = r.id, e.dst_id, e.src_id) AS UNSIGNED),
                     r.depth + 1
                 FROM reachable r
-                JOIN edges e ON e.src_id = r.id OR e.dst_id = r.id
+                JOIN edges e
+                  ON (e.src_id = r.id OR e.dst_id = r.id)
+                 AND {$temporal}
                 WHERE r.depth < {$depth}
             )
             SELECT e.id, e.type, e.canonical_name, MIN(r.depth) AS depth
@@ -138,8 +161,10 @@ final class Retriever
             LIMIT {$limit}
         ";
 
+        // ترتيب الوسائط يتبع ترتيب ظهورها بالنص: بذور الجزء غير التكراري أولاً،
+        // ثم وسائط الشرط الزمني داخل الجزء التكراري.
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(array_values($seedIds));
+        $stmt->execute([...array_values($seedIds), ...$temporalParams]);
 
         return array_map(
             static fn (array $row): array => [
@@ -155,9 +180,10 @@ final class Retriever
     /**
      * الاسترجاع الكامل: بذرة ثم جوار. هذا ما يُغذّى للنموذج كسياق.
      *
+     * @param string|null $asOf لقطة زمنية — راجع neighborhood()
      * @return list<array{id:int,type:string,canonical_name:string,depth:int}>
      */
-    public function retrieve(string $query, int $limit = 40): array
+    public function retrieve(string $query, int $limit = 40, ?string $asOf = null): array
     {
         $seeds = $this->seedsByText($query);
 
@@ -167,7 +193,7 @@ final class Retriever
 
         $seedIds = array_map(static fn (array $s): int => $s['id'], $seeds);
 
-        return $this->neighborhood($seedIds, self::MAX_DEPTH, $limit);
+        return $this->neighborhood($seedIds, self::MAX_DEPTH, $limit, $asOf);
     }
 
     /**

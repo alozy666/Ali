@@ -116,9 +116,9 @@ foreach (['https://api.anthropic.com/v1/models', 'https://api.deepgram.com/v1/pr
 |---|---|---|
 | `raw_inputs` | كل مدخل خام قبل أي معالجة | ١٠ |
 | `jobs` | الطابور — بديل Celery/Redis | ١٠ |
-| `entities` | العقد، مع `weight` و`state` لذاكرة الظل | ٧ |
+| `entities` | العقد، مع `weight` و`state` لذاكرة الظل و`episode_id` لتتبّع المصدر | ٧، ٢٠ |
 | `entity_aliases` | مفاتيح المطابقة — قلب دمج الكيانات | ٧، ٣٢ |
-| `edges` | العلاقات، بوزن يتراكم مع التكرار | ٧ |
+| `edges` | العلاقات بنافذة صلاحية (`valid_from`/`valid_until`) ومصدر خام | ٧، ٥، ٣٠ |
 | `embeddings` | جاهز، يُعبَّأ بالمرحلة ٢ | ٧ |
 | `action_types` | التصنيف وعدادات الترقية | ٤ |
 | `actions` | سجل الأفعال مع سبب كل قرار | ٥، ٢٠ |
@@ -134,6 +134,20 @@ foreach (['https://api.anthropic.com/v1/models', 'https://api.deepgram.com/v1/pr
 **حد العمق ضرورة لا تجميل:** MySQL لا يدعم شرط `CYCLE`. وشبكتك فيها دورات بطبيعتها (شخص ← مشروع ← قرار ← نفس الشخص)، فبلا حد العمق يتوسع الاستعلام بلا نهاية. العمق مثبَّت عند ٢.
 
 **مرونة الخصائص** — عمود `attrs JSON` يعطي ما تعطيه Neo4j: خاصية جديدة لأي عقدة بلا `ALTER TABLE`. هذي نفس حجة JSONB التي ذكرتها بقسم ٦.
+
+**البُعد الزمني** — كل علاقة لها نافذة صلاحية، والمتناقض **يُنسَخ لا يُحذف**
+(ق-١٦). أثره على الاستعلامات:
+
+```sql
+-- الحالة الآن — الافتراضي بكل استرجاع
+... JOIN edges e ON (...) AND e.valid_until IS NULL
+
+-- ماذا كنت أعرف يوم اتخذت ذلك القرار؟ (قسم ٣٠)
+... AND (e.valid_from  IS NULL OR e.valid_from  <= :asOf)
+    AND (e.valid_until IS NULL OR e.valid_until >  :asOf)
+```
+
+الفهرس على `valid_until` يخدم الحالة الأولى، وهي تقريباً كل استعلام تنقل.
 
 ### ملاحظتان على البحث النصي بالعربية
 

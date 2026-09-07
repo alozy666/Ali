@@ -59,6 +59,10 @@ CREATE TABLE entities (
     attrs          JSON NULL COMMENT 'خصائص مرنة؛ يقابل مرونة Graph DB بلا تعديل هيكلي',
     search_text    TEXT NULL COMMENT 'نص مطبّع للبحث — المرحلة ١ من الاسترجاع',
 
+    -- تتبّع المصدر (قسم ٢٠): أي مدخل خام أنشأ هذي العقدة أول مرة.
+    -- يجيب على «من وين جات هذي المعلومة؟» بلا تخمين.
+    episode_id     BIGINT UNSIGNED NULL COMMENT 'raw_inputs.id التي أنشأتها',
+
     -- الذاكرة المضيئة والمظلمة (قسم ٧): العقد لا تُحذف، يقلّ وزنها.
     weight         FLOAT NOT NULL DEFAULT 1.0,
     state          ENUM('active','shadow') NOT NULL DEFAULT 'active',
@@ -70,7 +74,10 @@ CREATE TABLE entities (
     PRIMARY KEY (id),
     KEY idx_type_state (type, state),
     KEY idx_freshness (last_seen_at),
-    FULLTEXT KEY ft_search (search_text)
+    KEY idx_episode (episode_id),
+    FULLTEXT KEY ft_search (search_text),
+    CONSTRAINT fk_entity_episode FOREIGN KEY (episode_id)
+        REFERENCES raw_inputs (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- قلب دمج الكيانات (قسم ٧ «أصعب نقطة تقنياً» + قسم ٣٢ ثنائية اللغة).
@@ -94,19 +101,47 @@ CREATE TABLE entity_aliases (
         REFERENCES entities (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- العلاقات — بنموذج ثنائي الزمن (Bi-Temporal).
+--
+-- الفكرة: الحقيقة لها **نافذة صلاحية** لا لحظة واحدة. حين تناقضها معلومة
+-- جديدة، القديمة **لا تُحذف** بل تُعلَّم بأنها نُسخت. هذا يحل ثلاث نقاط
+-- بالوثيقة دفعة واحدة:
+--
+--   قسم ٥  (حداثة المعلومة)  — يفرّق بين معلومة قديمة ومعلومة **بطلت**
+--   قسم ٧  (ذاكرة الظل)      — عقد الظل هي حرفياً الحقائق المنسوخة
+--   قسم ٣٠ (مراجعة التوقعات) — «ماذا كنت أعرف يوم قررت؟» استعلام لقطة زمنية
+--
+-- وعمود episode_id يحقق تتبّع الحقيقة لمصدرها الخام، وهو ما يشترطه قسم ٢٠:
+-- كل فعل تلقائي يُخزَّن معه ما استند عليه، فيصير التصرف الغريب قابلاً للتتبع.
+--
+-- حدّ مقصود: UNIQUE يعني **صفاً واحداً لكل علاقة**. لو بطلت علاقة ثم عادت
+-- صحيحة، تُحدَّث نافذتها ولا يُحفظ تاريخ الفجوة. المكاسب الأربعة أعلاه تتحقق
+-- بدون ذلك، وحفظ الفجوات يعقّد الكتابة بلا عائد واضح لنظام شخصي.
 CREATE TABLE edges (
-    id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    src_id     BIGINT UNSIGNED NOT NULL,
-    rel_type   VARCHAR(32) NOT NULL COMMENT 'belongs_to|related_to|led_to|develops|mentions',
-    dst_id     BIGINT UNSIGNED NOT NULL,
-    attrs      JSON NULL,
-    weight     FLOAT NOT NULL DEFAULT 1.0,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    src_id         BIGINT UNSIGNED NOT NULL,
+    rel_type       VARCHAR(32) NOT NULL COMMENT 'belongs_to|related_to|led_to|develops|mentions',
+    dst_id         BIGINT UNSIGNED NOT NULL,
+    attrs          JSON NULL,
+    weight         FLOAT NOT NULL DEFAULT 1.0,
+
+    valid_from     DATETIME NULL COMMENT 'متى صارت صحيحة — NULL يعني منذ created_at',
+    valid_until    DATETIME NULL COMMENT 'متى بطلت — NULL يعني ما زالت قائمة',
+    invalidated_by BIGINT UNSIGNED NULL COMMENT 'raw_inputs.id التي نسختها',
+    episode_id     BIGINT UNSIGNED NULL COMMENT 'raw_inputs.id التي أنشأتها',
+
+    created_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_edge (src_id, rel_type, dst_id),
     KEY idx_reverse (dst_id, rel_type),
+    -- الاسترجاع الافتراضي يقرأ القائم فقط، فالفهرس على valid_until يخدم
+    -- كل استعلام تنقل تقريباً
+    KEY idx_active (valid_until),
+    KEY idx_episode (episode_id),
     CONSTRAINT fk_edge_src FOREIGN KEY (src_id) REFERENCES entities (id) ON DELETE CASCADE,
-    CONSTRAINT fk_edge_dst FOREIGN KEY (dst_id) REFERENCES entities (id) ON DELETE CASCADE
+    CONSTRAINT fk_edge_dst FOREIGN KEY (dst_id) REFERENCES entities (id) ON DELETE CASCADE,
+    CONSTRAINT fk_edge_episode FOREIGN KEY (episode_id) REFERENCES raw_inputs (id) ON DELETE SET NULL,
+    CONSTRAINT fk_edge_invalidator FOREIGN KEY (invalidated_by) REFERENCES raw_inputs (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- المتجهات: الجدول جاهز، لكن لا يُعبَّأ بالمرحلة ١.

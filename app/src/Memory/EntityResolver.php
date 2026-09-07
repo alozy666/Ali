@@ -34,9 +34,15 @@ final class EntityResolver
     /**
      * @param list<string> $aliases صيغ إضافية للاسم نفسه (ترجمة، اختصار، كنية)
      * @param array<string,mixed> $attrs
+     * @param int|null $episodeId المدخل الخام الذي ذكر هذا الكيان — تتبّع المصدر (قسم ٢٠)
      */
-    public function resolve(string $name, string $type, array $aliases = [], array $attrs = []): Resolution
-    {
+    public function resolve(
+        string $name,
+        string $type,
+        array $aliases = [],
+        array $attrs = [],
+        ?int $episodeId = null,
+    ): Resolution {
         $forms = $this->normalizedForms($name, $aliases);
 
         if ($forms === []) {
@@ -55,7 +61,7 @@ final class EntityResolver
         $ids = array_map('intval', array_keys($candidateIds));
 
         if ($ids === []) {
-            return Resolution::created($this->create($name, $type, $aliases, $attrs));
+            return Resolution::created($this->create($name, $type, $aliases, $attrs, $episodeId));
         }
 
         // التصفية بالنوع تحل أغلب الغموض بلا إزعاجه: مشروع اسمه «ناشِر» وشخص
@@ -75,7 +81,7 @@ final class EntityResolver
 
         if ($matching === []) {
             // المفتاح موجود لكن لنوع آخر — كيان جديد، لا دمج
-            return Resolution::created($this->create($name, $type, $aliases, $attrs));
+            return Resolution::created($this->create($name, $type, $aliases, $attrs, $episodeId));
         }
 
         return Resolution::ambiguous($matching);
@@ -104,13 +110,19 @@ final class EntityResolver
     /**
      * @param list<string> $aliases
      * @param array<string,mixed> $attrs
+     * @param int|null $episodeId
      */
-    private function create(string $name, string $type, array $aliases, array $attrs): int
-    {
+    private function create(
+        string $name,
+        string $type,
+        array $aliases,
+        array $attrs,
+        ?int $episodeId = null,
+    ): int {
         $rawForms = [$name, ...$aliases];
 
         $searchText = ArabicNormalizer::buildSearchText($rawForms);
-        $entityId = $this->store->createEntity($type, $name, $attrs, $searchText);
+        $entityId = $this->store->createEntity($type, $name, $attrs, $searchText, $episodeId);
 
         // كل صيغة تُسجَّل أليساً، لا الاسم الأساسي وحده.
         // إغفال هذا يعني أن «زينب (Zainab)» تُنشئ عقدة يصلها العربي فقط، ثم

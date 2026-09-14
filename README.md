@@ -1,81 +1,87 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <title>تمييز الأنماط الهندسية - مستويات</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background-color: #f0f8ff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      color: #2c3e50;
-      margin-top: 20px;
-    }
-    .shape {
-      width: 60px;
-      height: 60px;
-      margin: 5px;
-      border: 2px solid #ccc;
-      display: inline-block;
-    }
-    .square { background-color: #e74c3c; }
-    .circle { background-color: #2980b9; border-radius: 50%; }
-    .triangle {
-      width: 0;
-      height: 0;
-      border-left: 30px solid transparent;
-      border-right: 30px solid transparent;
-      border-bottom: 60px solid #27ae60;
-      background: none;
-    }
-    .diamond { background-color: #8e44ad; transform: rotate(45deg); }
-    .star {
-      background-color: gold;
-      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-    }
-    .rectangle { background-color: #34495e; width: 80px; height: 40px; }
-    .heart {
-      background-color: pink;
-      width: 60px;
-      height: 60px;
-      position: relative;
-      transform: rotate(-45deg);
-    }
-    .heart::before,
-    .heart::after {
-      content: "";
-      background-color: pink;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      position: absolute;
-    }
-    .heart::before { top: -30px; left: 0; }
-    .heart::after { top: 0; left: 30px; }
-    .slot {
-      width: 60px;
-      height: 60px;
-      border: 2px dashed #bbb;
-      background-color: #fff;
-      display: inline-block;
-      margin: 5px;
-    }
-    .slot.highlight { background-color: #fff8dc; border-color: #f39c12; }
-    .slot.filled { border: 2px solid #2ecc71; }
-    .hidden { display: none; }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-<!-- ... rest of the HTML structure ... -->
-</body>
-</html>
+<div align="center">
+
+# ✨ وَكُن مِنَ العارِفِينَ ✨
+
+**لعبة مسابقات ومعارف إسلامية تفاعلية — أربع ألعاب، وسبع محطات من مكة إلى سامراء**
+
+إعداد وتصميم: **محمد المسيح** · by **Mohamed Almseeh**
+
+</div>
+
+---
+
+## 🎮 ما هذه اللعبة؟
+
+لعبة مسابقات تُدار بين **فريقَين أو أكثر**، بإدارة حَكَم، وتتكوّن من أربع ألعاب:
+
+| اللعبة | الفكرة | الوقت |
+|--------|--------|-------|
+| 🎲 **مَن يزيّد؟** | مزاد على عدد ما تستطيع سرده ضمن تصنيف. الفشل يُحوّل النقاط للمنافس | 30 ثانية |
+| 🕋 **رحلة السفر** | 7 محطات: مكة ← المدينة ← النجف ← كربلاء ← الكاظمية ← مشهد ← سامراء | 60 ثانية للسؤال |
+| 💡 **لَمِّح إليّ** | ثلاث كلمات مفتاحية، والأسرع في الاستنتاج الصحيح يفوز | 45 ثانية |
+| ❓ **اسأل وجاوب** | عقائد وفقه وقرآن وتاريخ، مع ثلاثة كروت مساعدة | 60 ثانية |
+
+---
+
+## ▶️ كيف ألعب؟
+
+### الطريقة الأولى: تطبيق الويب (ملف واحد)
+حمّل **`dist/wakun-min-al-arifeen.html`** وافتحه بنقرة مزدوجة.
+لا يحتاج إنترنت، ولا خادماً، ولا تثبيت أي شيء. انسخه على أي جهاز أو على USB وسيعمل.
+
+### الطريقة الثانية: الحَكَم الآلي داخل Claude
+افتح محادثة جديدة، والصق **`prompts/game-master.md`** ثم **`prompts/question-bank.md`**، وستبدأ الجلسة فوراً.
+
+---
+
+## 📚 بنك الأسئلة
+
+| القسم | العدد |
+|-------|-------|
+| رحلة السفر | 63 سؤالاً (7 محطات × 9) |
+| اسأل وجاوب | 80 سؤالاً (عقائد · فقه · قرآن · تاريخ · كتب) |
+| لَمِّح إليّ | 40 بطاقة |
+| مَن يزيّد؟ | 26 تصنيفاً (243 عنصراً) |
+| **المجموع** | **209 عناصر** |
+
+**كل عنصر يحمل مصدره.** المصادر المعتمدة: الكافي · من لا يحضره الفقيه · تهذيب الأحكام والاستبصار · بحار الأنوار · الإرشاد · إعلام الورى · كمال الدين · عيون أخبار الرضا · الاحتجاج · نهج البلاغة · الصحيفة السجادية · القرآن الكريم. التفاصيل في [`data/sources.md`](data/sources.md).
+
+> أسئلة الفقه معرفية، وللعمل يُرجع إلى فتوى المرجع.
+
+---
+
+## 🛠️ للمطوّرين
+
+```bash
+node tools/validate.js      # فحص البنك: البنية · التفرّد · المصادر · التكرار
+node tools/test-station.js  # اختبار المحرّك: رحلة كاملة بفريقين
+node tools/export-bank.js   # تحديث نسخة الحَكَم الآلي
+node tools/build.js         # بناء الملف الواحد في dist/
+
+python3 -m http.server 8000 # للتطوير: http://localhost:8000/web/
+```
+
+### إضافة أسئلة
+أضف السؤال إلى الملف المناسب في `data/`، ثم شغّل `validate` و`export-bank` و`build`.
+اقرأ [`prompts/question-style-guide.md`](prompts/question-style-guide.md) أولاً — فيه قواعد الإسناد والصياغة.
+
+### بنية المستودع
+```
+CLAUDE.md        دليل المشروع الكامل (القوانين · البيانات · السياسات)
+milestones.md    خارطة الطريق والمراحل
+data/            بنك الأسئلة (مصدر الحقيقة الوحيد)
+web/             شيفرة التطبيق (تُدمج في ملف واحد)
+tools/           أدوات التحقّق والبناء والتصدير
+prompts/         حزمة الحَكَم الآلي
+dist/            الملف النهائي القابل للتوزيع
+legacy/          ملفات قديمة غير ذات صلة بالمشروع
+```
+
+---
+
+<div align="center">
+
+by Mohamed Almseeh<br>
+إعداد: محمد المسيح
+
+</div>

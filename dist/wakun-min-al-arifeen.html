@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>وَكُن مِنَ العارِفِينَ</title>
+<meta name="description" content="لعبة مسابقات ومعارف إسلامية — إعداد: محمد المسيح">
+<style>
+/* css/tokens.css */
+/* الهوية البصرية — وَكُن مِنَ العارِفِينَ */
+:root {
+  --emerald-deep: #0B3D2E;
+  --emerald: #145743;
+  --navy-deep:  #0A1A3C;
+  --navy:       #12285C;
+  --gold:       #D4AF37;
+  --gold-soft:  #E8C96A;
+  --ivory:      #F5EFE0;
+
+  /* اللوحة الافتراضية: ليلية (هوية اللعبة الأساسية) */
+  --bg:        var(--navy-deep);
+  --bg-card:   rgba(11, 61, 46, .55);
+  --fg:        var(--ivory);
+  --fg-dim:    rgba(245, 239, 224, .74);
+  --gold-text: var(--gold-soft);          /* لون العناوين الذهبية */
+  --line:      rgba(212, 175, 55, .28);
+  --grad-a: #F0D98A; --grad-b: #D4AF37; --grad-c: #9A7B1E;
+  --glow-gold: rgba(212, 175, 55, .16);
+  --glow-green: rgba(20, 87, 67, .45);
+
+  --radius: 16px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+  --font: "Noto Naskh Arabic", "Amiri", "Scheherazade New", "Traditional Arabic", system-ui, Tahoma, sans-serif;
+
+  /* أحجام كبيرة عمداً: الجميع يقرأ من شاشة الحَكَم عن بُعد */
+  --fs-title: clamp(2.1rem, 6vw, 4rem);
+  --fs-lead:  clamp(1.05rem, 2.4vw, 1.5rem);
+  --fs-body:  clamp(1rem, 2vw, 1.2rem);
+}
+
+/* الوضع النهاري: ذهب داكن على عاجي ليبقى التباين عالياً */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:        #FBF7EC;
+    --bg-card:   #FFFFFF;
+    --fg:        #10203A;
+    --fg-dim:    #4A5568;
+    --gold-text: #6B5214;
+    --gold:      #8A6D1F;
+    --line:      rgba(11, 61, 46, .20);
+    --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
+    --glow-gold: rgba(212, 175, 55, .10);
+    --glow-green: rgba(20, 87, 67, .10);
+    --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+  }
+}
+:root[data-theme="light"] {
+  --bg:        #FBF7EC;
+  --bg-card:   #FFFFFF;
+  --fg:        #10203A;
+  --fg-dim:    #4A5568;
+  --gold-text: #6B5214;
+  --gold:      #8A6D1F;
+  --line:      rgba(11, 61, 46, .20);
+  --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
+  --glow-gold: rgba(212, 175, 55, .10);
+  --glow-green: rgba(20, 87, 67, .10);
+  --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+}
+
+/* css/main.css */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background:
+    radial-gradient(1200px 700px at 80% -10%, var(--glow-gold), transparent 60%),
+    radial-gradient(900px 600px at 10% 110%, var(--glow-green), transparent 60%),
+    var(--bg);
+  color: var(--fg); font-family: var(--font); font-size: var(--fs-body);
+  line-height: 1.85; min-height: 100vh;
+}
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 2.5rem 1rem; padding-inline: 20px; }
+
+.hero { text-align: center; padding-block: 1rem 2rem; }
+.hero h1 {
+  font-size: var(--fs-title); margin: 0 0 .4rem; line-height: 1.3; letter-spacing: .5px;
+  background: linear-gradient(180deg, var(--grad-a), var(--grad-b) 55%, var(--grad-c));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 2px 30px rgba(212,175,55,.25);
+}
+.hero .lead { font-size: var(--fs-lead); color: var(--fg-dim); margin: 0 auto; max-width: 62ch; }
+
+.path { display: flex; align-items: center; justify-content: center; gap: .5rem;
+        flex-wrap: wrap; margin: 1.6rem 0 .5rem; }
+.path .node { border: 1px solid var(--line); border-radius: 999px; padding: .35rem 1rem;
+              background: var(--bg-card); font-size: .95rem; white-space: nowrap; }
+.path .node.first, .path .node.last { border-color: var(--gold); color: var(--gold-text); font-weight: 700; }
+.path .sep { color: var(--gold); opacity: .6; }
+
+.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); margin-top: 2rem; }
+.card { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 1.2rem 1.3rem; box-shadow: var(--shadow); }
+.card h3 { margin: 0 0 .5rem; color: var(--gold-text); font-size: 1.15rem; }
+.card p  { margin: 0; color: var(--fg-dim); font-size: .98rem; }
+
+.stats { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.stat { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px;
+        padding: .6rem 1rem; min-width: 120px; text-align: center; }
+.stat b { display: block; font-size: 1.7rem; color: var(--gold); line-height: 1.2; }
+.stat span { font-size: .9rem; color: var(--fg-dim); }
+
+.check { margin-top: 1.4rem; border: 1px dashed var(--line); border-radius: var(--radius); padding: 1rem 1.2rem; }
+.check ul { margin: .5rem 0 0; padding-inline-start: 1.2rem; }
+.check li { color: var(--fg-dim); }
+.check li.ok::marker { content: "✅ "; }
+.check li.no::marker { content: "❌ "; }
+
+.note { margin-top: 1.4rem; border-inline-start: 4px solid var(--gold);
+        background: rgba(212,175,55,.08); padding: .9rem 1.1rem; border-radius: 10px; color: var(--fg-dim); }
+
+.signature { text-align: center; color: var(--gold-text); opacity: 1; font-size: .95rem;
+             padding: 2rem 20px 2.5rem; border-top: 1px solid var(--line); margin-top: 2.5rem; line-height: 1.7; }
+table.scores { width: 100%; border-collapse: collapse; margin-top: .8rem; }
+table.scores th, table.scores td { border-bottom: 1px solid var(--line); padding: .55rem .4rem; text-align: right; }
+table.scores th { color: var(--gold-text); font-weight: normal; }
+
+</style>
+</head>
+<body>
+<div id="app"><div class="wrap"><p>جارٍ التحميل…</p></div></div>
+<footer class="signature">by Mohamed Almseeh<br>إعداد: محمد المسيح</footer>
+<script>window.GAME_DATA = {"config":{"version":"1.0","title":"وَكُن مِنَ العارِفِينَ","subtitle":"لعبة مسابقات ومعارف إسلامية","author":"محمد المسيح","signature":{"en":"by Mohamed Almseeh","ar":"إعداد: محمد المسيح"},"timers":{"bidding_count":30,"question":60,"hint":45,"sudden_death":45,"warn_at":5},"points":{"difficulty":{"easy":10,"medium":20,"hard":30},"bidding":{"base":25,"per_extra_item":2},"hint":{"base":20,"extra_hint_penalty":5},"station_bonus":15},"cards":{"journey":["pass","swap","options"],"qa":["options","ask_help","fifty"],"uses_per_card":1},"rules":{"pass_card_chooses_target":true,"tiebreak":"sudden_death_hard","questions_per_station_per_team":3,"min_teams":2},"stations":[{"id":"mecca","name":"مكة المكرمة","order":1,"theme":"السيرة النبوية المبكرة والمبعث والدعوة"},{"id":"medina","name":"المدينة المنورة","order":2,"theme":"النبي الأكرم والزهراء والحسن المجتبى وأئمة البقيع (ع)"},{"id":"najaf","name":"النجف الأشرف","order":3,"theme":"سيرة وعلم أمير المؤمنين الإمام علي (ع)"},{"id":"karbala","name":"كربلاء المقدسة","order":4,"theme":"النهضة الحسينية والإمام الحسين وأصحابه (ع)"},{"id":"kadhimiya","name":"الكاظمية المقدسة","order":5,"theme":"الإمام موسى الكاظم والإمام محمد الجواد (ع)"},{"id":"mashhad","name":"مشهد المقدسة","order":6,"theme":"الإمام علي بن موسى الرضا (ع)"},{"id":"samarra","name":"سامراء المقدسة","order":7,"theme":"الإمام علي الهادي والإمام الحسن العسكري (ع)"}]},"journey":[{"station":"mecca","name":"مكة المكرمة","questions":[{"id":"jr-mecca-e01","game":"journey","station":"mecca","difficulty":"easy","type":"mcq","text":"في أي عام وُلد النبي الأكرم محمد (ص)؟","options":["عام الحزن","عام الفيل","عام الوفود","عام الفتح"],"answer":1,"explanation":"وُلد النبي (ص) عام الفيل، وهو العام الذي قصد فيه أبرهة هدم الكعبة فردّه الله بطير أبابيل.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج1"},"tags":["السيرة النبوية","الولادة"]},{"id":"jr-mecca-e02","game":"journey","station":"mecca","difficulty":"easy","type":"tf","text":"بُعث النبي الأكرم (ص) بالرسالة وعمره أربعون سنة.","answer":true,"explanation":"نعم، بُعث (ص) وهو ابن أربعين سنة، وكان ذلك في شهر رجب في المشهور عند الإمامية.","source":{"book":"إعلام الورى","author":"الشيخ الطبرسي"},"tags":["المبعث"]},{"id":"jr-mecca-e03","game":"journey","station":"mecca","difficulty":"easy","type":"mcq","text":"أين وُلد أمير المؤمنين الإمام علي (ع)؟","options":["في دار أبي طالب","في جوف الكعبة المشرفة","في شِعب أبي طالب","في غار حراء"],"answer":1,"explanation":"وُلد (ع) في جوف الكعبة، ولم يُولد فيها أحد قبله ولا بعده، وهي فضيلة خاصة به.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["الإمام علي","الكعبة"]},{"id":"jr-mecca-m01","game":"journey","station":"mecca","difficulty":"medium","type":"mcq","text":"في أي غار كان النبي (ص) يتعبّد ويتحنّث قبل البعثة؟","options":["غار ثور","غار حراء","غار الكهف","غار المرسلات"],"answer":1,"explanation":"كان (ص) يتعبّد في غار حراء في جبل النور، وفيه نزل عليه الوحي أول مرة.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["المبعث","حراء"]},{"id":"jr-mecca-m02","game":"journey","station":"mecca","difficulty":"medium","type":"mcq","text":"من أول من آمن بالنبي (ص) من الرجال؟","options":["زيد بن حارثة","أمير المؤمنين علي بن أبي طالب (ع)","عمار بن ياسر","أبو ذر الغفاري"],"answer":1,"explanation":"أول من آمن من الرجال أمير المؤمنين (ع)، وقد صلّى مع النبي (ص) وخديجة (ع) قبل الناس جميعاً.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج1"},"tags":["الإمام علي","السبق إلى الإسلام"]},{"id":"jr-mecca-m03","game":"journey","station":"mecca","difficulty":"medium","type":"tf","text":"سُمّي العام الذي تُوفّي فيه أبو طالب (ع) والسيدة خديجة (ع) بـ«عام الحزن».","answer":true,"explanation":"سُمّي بذلك لعِظم مصاب النبي (ص) بفقد ناصره أبي طالب وزوجه خديجة (ع) في عام واحد.","source":{"book":"إعلام الورى","author":"الشيخ الطبرسي"},"tags":["عام الحزن","أبو طالب","خديجة"]},{"id":"jr-mecca-h01","game":"journey","station":"mecca","difficulty":"hard","type":"mcq","text":"كم سنة دام حصار قريش لبني هاشم في شِعب أبي طالب؟","options":["سنة واحدة","سنتان","ثلاث سنوات","خمس سنوات"],"answer":2,"explanation":"دام الحصار في الشِعب ثلاث سنوات، وكان أبو طالب (ع) يحمي النبي (ص) فيها حتى مُزّقت الصحيفة.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["شعب أبي طالب","الحصار"]},{"id":"jr-mecca-h02","game":"journey","station":"mecca","difficulty":"hard","type":"mcq","text":"في «يوم الدار» (يوم إنذار العشيرة) قال النبي (ص): إنّ هذا أخي ووصيي وخليفتي فيكم. فمن كان المقصود؟","options":["حمزة بن عبد المطلب","العباس بن عبد المطلب","علي بن أبي طالب (ع)","جعفر بن أبي طالب"],"answer":2,"explanation":"لمّا نزل قوله تعالى: وأنذر عشيرتك الأقربين، جمع النبي (ص) بني عبد المطلب فنصّ على أمير المؤمنين (ع) بالأخوّة والوصاية والخلافة.","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["يوم الدار","الوصاية","الإنذار"]},{"id":"jr-mecca-h03","game":"journey","station":"mecca","difficulty":"hard","type":"mcq","text":"في أي مناسبة نزل قوله تعالى: وَمِنَ النَّاسِ مَن يَشْرِي نَفْسَهُ ابْتِغَاءَ مَرْضَاتِ اللَّهِ؟","options":["في بيعة العقبة","في ليلة مبيت الإمام علي (ع) على فراش النبي (ص)","في غزوة بدر","في صلح الحديبية"],"answer":1,"explanation":"نزلت الآية (البقرة 207) في ليلة الهجرة حين بات أمير المؤمنين (ع) على فراش النبي (ص) فداءً له.","source":{"book":"القرآن الكريم","author":"سورة البقرة: 207","ref":"وبحار الأنوار للمجلسي"},"tags":["ليلة المبيت","الهجرة","آيات نزلت في علي"]}]},{"station":"medina","name":"المدينة المنورة","questions":[{"id":"jr-medina-e01","game":"journey","station":"medina","difficulty":"easy","type":"mcq","text":"من هي أمّ السيدة فاطمة الزهراء (ع)؟","options":["أم سلمة","خديجة بنت خويلد (ع)","أم أيمن","فاطمة بنت أسد"],"answer":1,"explanation":"أمّها السيدة خديجة بنت خويلد (ع)، أول من آمن بالنبي (ص) من النساء.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الزهراء","خديجة"]},{"id":"jr-medina-e02","game":"journey","station":"medina","difficulty":"easy","type":"mcq","text":"حين آخى النبي (ص) بين المسلمين في المدينة، من اتّخذه أخاً لنفسه؟","options":["أبو بكر","عمر بن الخطاب","علي بن أبي طالب (ع)","عثمان بن عفان"],"answer":2,"explanation":"قال له (ص): أنت أخي في الدنيا والآخرة، بعد أن آخى بين المهاجرين والأنصار.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج1"},"tags":["المؤاخاة","الإمام علي"]},{"id":"jr-medina-e03","game":"journey","station":"medina","difficulty":"easy","type":"tf","text":"أئمة البقيع (ع) أربعة: الحسن المجتبى، وعلي بن الحسين السجاد، ومحمد الباقر، وجعفر الصادق.","answer":true,"explanation":"نعم، هؤلاء الأئمة الأربعة (ع) مدفونون في بقيع الغرقد بالمدينة المنورة.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["أئمة البقيع"]},{"id":"jr-medina-m01","game":"journey","station":"medina","difficulty":"medium","type":"mcq","text":"كم عدد التكبيرات في تسبيح الزهراء (ع)؟","options":["ثلاث وثلاثون","أربع وثلاثون","سبع عشرة","مئة"],"answer":1,"explanation":"تسبيح الزهراء (ع): أربع وثلاثون تكبيرة، ثم ثلاث وثلاثون تحميدة، ثم ثلاث وثلاثون تسبيحة، علّمه النبي (ص) ابنته.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["تسبيح الزهراء","التعقيبات"]},{"id":"jr-medina-m02","game":"journey","station":"medina","difficulty":"medium","type":"mcq","text":"في أي سنة هجرية كان صلح الإمام الحسن المجتبى (ع) مع معاوية؟","options":["سنة 40 هـ","سنة 41 هـ","سنة 50 هـ","سنة 61 هـ"],"answer":1,"explanation":"كان الصلح سنة 41 هـ بعد استشهاد أمير المؤمنين (ع)، حقناً لدماء المسلمين وحفظاً لبيضة الإسلام.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الحسن","الصلح"]},{"id":"jr-medina-m03","game":"journey","station":"medina","difficulty":"medium","type":"tf","text":"قال النبي (ص) لأمير المؤمنين (ع): أما ترضى أن تكون مني بمنزلة هارون من موسى، وذلك عند خروجه إلى غزوة تبوك.","answer":true,"explanation":"هو «حديث المنزلة»، قاله (ص) حين استخلف أمير المؤمنين (ع) على المدينة عند خروجه إلى تبوك.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["حديث المنزلة","تبوك"]},{"id":"jr-medina-h01","game":"journey","station":"medina","difficulty":"hard","type":"mcq","text":"من الصحابي الذي حمل سلام النبي (ص) إلى الإمام محمد الباقر (ع)؟","options":["أبو ذر الغفاري","جابر بن عبد الله الأنصاري","سلمان المحمدي","المقداد بن الأسود"],"answer":1,"explanation":"أوصى النبي (ص) جابراً أن يُبلّغ سلامه إلى الباقر (ع)، فعاش جابر حتى أدركه وأدّى الأمانة.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الباقر","جابر الأنصاري"]},{"id":"jr-medina-h02","game":"journey","station":"medina","difficulty":"hard","type":"mcq","text":"من الذين خرج بهم النبي (ص) يوم المباهلة مع نصارى نجران؟","options":["أصحابه المهاجرون والأنصار","علي وفاطمة والحسن والحسين (ع)","بنو هاشم جميعاً","أزواجه وبناته"],"answer":1,"explanation":"خرج (ص) بأمير المؤمنين والزهراء والحسنين (ع) مصداقاً لقوله تعالى: أبناءنا وأبناءكم ونساءنا ونساءكم وأنفسنا وأنفسكم.","source":{"book":"القرآن الكريم","author":"سورة آل عمران: 61","ref":"والإرشاد للشيخ المفيد"},"tags":["المباهلة","أهل البيت","نجران"]},{"id":"jr-medina-h03","game":"journey","station":"medina","difficulty":"hard","type":"mcq","text":"«رسالة الحقوق» التي أحصت حقوق الله والنفس والجوارح والناس، عن أي إمام رُويت؟","options":["الإمام الباقر (ع)","الإمام الصادق (ع)","الإمام زين العابدين (ع)","الإمام الحسن المجتبى (ع)"],"answer":2,"explanation":"هي عن الإمام علي بن الحسين زين العابدين (ع)، رواها الشيخ الصدوق في كتبه.","source":{"book":"الخصال","author":"الشيخ الصدوق"},"tags":["الإمام السجاد","رسالة الحقوق"]}]},{"station":"najaf","name":"النجف الأشرف","questions":[{"id":"jr-najaf-e01","game":"journey","station":"najaf","difficulty":"easy","type":"mcq","text":"في أي شهر استُشهد أمير المؤمنين الإمام علي (ع)؟","options":["محرم","صفر","رمضان","ذو الحجة"],"answer":2,"explanation":"ضُرب (ع) في ليلة التاسع عشر من رمضان واستُشهد في الحادي والعشرين منه سنة 40 هـ.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج1"},"tags":["الإمام علي","الاستشهاد"]},{"id":"jr-najaf-e02","game":"journey","station":"najaf","difficulty":"easy","type":"mcq","text":"من جمع كتاب «نهج البلاغة»؟","options":["الشيخ المفيد","الشريف الرضي","الشيخ الطوسي","العلّامة المجلسي"],"answer":1,"explanation":"جمعه الشريف الرضي (ت 406 هـ) من خطب أمير المؤمنين (ع) ورسائله وحكمه.","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي"},"tags":["نهج البلاغة"]},{"id":"jr-najaf-e03","game":"journey","station":"najaf","difficulty":"easy","type":"tf","text":"الكنية التي كنّى بها النبي (ص) الإمام عليّاً (ع) وكانت أحبّ أسمائه إليه هي «أبو تراب».","answer":true,"explanation":"كنّاه بها النبي (ص) وكان (ع) يفرح بها لأنها من رسول الله (ص).","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["الإمام علي","الألقاب"]},{"id":"jr-najaf-m01","game":"journey","station":"najaf","difficulty":"medium","type":"mcq","text":"أين ضُرب أمير المؤمنين (ع) الضربة التي استُشهد بها؟","options":["في داره","في محراب مسجد الكوفة","في مسجد النبي (ص)","في ساحة المعركة"],"answer":1,"explanation":"ضربه عبد الرحمن بن ملجم المرادي وهو ساجد في محراب مسجد الكوفة في صلاة الفجر.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج1"},"tags":["الاستشهاد","مسجد الكوفة"]},{"id":"jr-najaf-m02","game":"journey","station":"najaf","difficulty":"medium","type":"mcq","text":"في أي يوم كانت بيعة الغدير التي نصّ فيها النبي (ص) على ولاية أمير المؤمنين (ع)؟","options":["الثامن من ذي الحجة","العاشر من ذي الحجة","الثامن عشر من ذي الحجة","الأول من محرم"],"answer":2,"explanation":"كانت في الثامن عشر من ذي الحجة سنة 10 هـ في غدير خم مرجع النبي (ص) من حجة الوداع.","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["الغدير","الولاية"]},{"id":"jr-najaf-m03","game":"journey","station":"najaf","difficulty":"medium","type":"mcq","text":"أيّ معارك أمير المؤمنين (ع) كانت ضد الخوارج؟","options":["الجمل","صفين","النهروان","بدر"],"answer":2,"explanation":"معركة النهروان كانت ضد الخوارج الذين خرجوا عليه (ع) بعد قضية التحكيم في صفين.","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي"},"tags":["النهروان","الخوارج"]},{"id":"jr-najaf-h01","game":"journey","station":"najaf","difficulty":"hard","type":"mcq","text":"ما اسم الخطبة التي مطلعها: أمَا واللهِ لقد تقمّصها فلانٌ وإنه ليعلم أن محلّي منها محلّ القطب من الرحى؟","options":["الخطبة القاصعة","الخطبة الشقشقية","خطبة الأشباح","خطبة همّام"],"answer":1,"explanation":"هي الخطبة الشقشقية، من أشهر خطب نهج البلاغة، وسُمّيت بذلك لقوله (ع) في آخرها: تلك شِقشِقةٌ هدرت ثم قرّت.","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي","ref":"الخطبة الثالثة"},"tags":["الشقشقية","نهج البلاغة"]},{"id":"jr-najaf-h02","game":"journey","station":"najaf","difficulty":"hard","type":"mcq","text":"كتب أمير المؤمنين (ع) عهده المشهور لمالك الأشتر حين ولّاه على أي بلد؟","options":["الشام","مصر","البصرة","اليمن"],"answer":1,"explanation":"كتبه (ع) لمالك الأشتر النخعي حين ولّاه مصر، وهو أطول وثيقة في نهج البلاغة في سياسة الحكم والعدل.","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي","ref":"الكتاب 53"},"tags":["عهد مالك الأشتر","العدل"]},{"id":"jr-najaf-h03","game":"journey","station":"najaf","difficulty":"hard","type":"mcq","text":"خطبة «همّام» في نهج البلاغة هي الخطبة التي وصف فيها أمير المؤمنين (ع):","options":["صفات المتقين","خلق الطاووس","فضل أهل البيت","أحوال يوم القيامة"],"answer":0,"explanation":"وصف فيها (ع) صفات المتقين لصاحبه همّام، فصعق همّام صعقةً كانت نفسه فيها.","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي","ref":"خطبة المتقين"},"tags":["المتقين","همّام","نهج البلاغة"]}]},{"station":"karbala","name":"كربلاء المقدسة","questions":[{"id":"jr-karbala-e01","game":"journey","station":"karbala","difficulty":"easy","type":"mcq","text":"في أي يوم استُشهد الإمام الحسين (ع) في كربلاء؟","options":["الأول من محرم","العاشر من محرم","العشرون من صفر","الثامن من ذي الحجة"],"answer":1,"explanation":"استُشهد (ع) يوم عاشوراء، العاشر من محرم سنة 61 هـ.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["عاشوراء","الاستشهاد"]},{"id":"jr-karbala-e02","game":"journey","station":"karbala","difficulty":"easy","type":"mcq","text":"من حمل لواء الإمام الحسين (ع) يوم عاشوراء؟","options":["حبيب بن مظاهر","أبو الفضل العباس (ع)","زهير بن القين","مسلم بن عوسجة"],"answer":1,"explanation":"حمل اللواء أخوه أبو الفضل العباس بن علي (ع)، وهو قمر بني هاشم وحامل لواء الحسين وساقي عطاشى كربلاء.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["العباس","اللواء"]},{"id":"jr-karbala-e03","game":"journey","station":"karbala","difficulty":"easy","type":"tf","text":"أمّ الإمام الحسين (ع) هي السيدة فاطمة الزهراء بنت رسول الله (ص).","answer":true,"explanation":"نعم، وأبوه أمير المؤمنين (ع)، وهو سبط رسول الله (ص) وريحانته.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الإمام الحسين","النسب"]},{"id":"jr-karbala-m01","game":"journey","station":"karbala","difficulty":"medium","type":"mcq","text":"من أرسله الإمام الحسين (ع) سفيراً له إلى أهل الكوفة؟","options":["مسلم بن عقيل","هانئ بن عروة","قيس بن مسهر الصيداوي","محمد بن الحنفية"],"answer":0,"explanation":"أرسل ابن عمه مسلم بن عقيل (رض)، فبايعه أهل الكوفة ثم خذلوه، واستُشهد قبل عاشوراء.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["مسلم بن عقيل","الكوفة"]},{"id":"jr-karbala-m02","game":"journey","station":"karbala","difficulty":"medium","type":"mcq","text":"من القائد الذي كان في جيش ابن سعد ثم تاب والتحق بالإمام الحسين (ع) صبيحة عاشوراء؟","options":["عمر بن سعد","الحر بن يزيد الرياحي","شبث بن ربعي","عبد الله بن حوزة"],"answer":1,"explanation":"هو الحر بن يزيد الرياحي الذي اعترض الحسين (ع) أولاً ثم تاب والتحق به واستُشهد بين يديه.","source":{"book":"اللهوف","author":"السيد ابن طاووس"},"tags":["الحر الرياحي","التوبة"]},{"id":"jr-karbala-m03","game":"journey","station":"karbala","difficulty":"medium","type":"mcq","text":"من أول من زار قبر الإمام الحسين (ع) في أربعينه؟","options":["الإمام السجاد (ع)","جابر بن عبد الله الأنصاري","عطية العوفي","المختار الثقفي"],"answer":1,"explanation":"جابر بن عبد الله الأنصاري (رض) ومعه عطية العوفي، وهو أصل زيارة الأربعين.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["الأربعين","جابر الأنصاري"]},{"id":"jr-karbala-h01","game":"journey","station":"karbala","difficulty":"hard","type":"mcq","text":"في أي يوم خرج الإمام الحسين (ع) من مكة متوجهاً إلى العراق؟","options":["الأول من ذي الحجة","الثامن من ذي الحجة (يوم التروية)","العاشر من ذي الحجة","آخر ذي الحجة"],"answer":1,"explanation":"خرج (ع) يوم التروية، الثامن من ذي الحجة، وحوّل حجّه إلى عمرة صوناً لحرمة البيت من أن تُستباح بدمه.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["يوم التروية","الخروج من مكة"]},{"id":"jr-karbala-h02","game":"journey","station":"karbala","difficulty":"hard","type":"mcq","text":"في أي مدينة ألقت العقيلة زينب (ع) خطبتها التي قالت فيها: يا أهل الكوفة، يا أهل الخَتْل والغدر؟","options":["المدينة المنورة","الكوفة","الشام","كربلاء"],"answer":1,"explanation":"ألقتها (ع) في الكوفة وهي في السبي، فأسكتت الأنفاس وحبست الأصوات.","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["زينب","خطبة الكوفة","السبي"]},{"id":"jr-karbala-h03","game":"journey","station":"karbala","difficulty":"hard","type":"mcq","text":"من الصحابي الكبير الذي كان من أصحاب أمير المؤمنين (ع) واستُشهد مع الإمام الحسين (ع) في كربلاء وقد بلغ من العمر عتيّاً؟","options":["زهير بن القين","حبيب بن مظاهر الأسدي","بُرير بن خضير","نافع بن هلال"],"answer":1,"explanation":"حبيب بن مظاهر الأسدي (رض)، وكان من خواص أمير المؤمنين (ع)، وقد راسله الحسين (ع) فلبّى شيخاً كبيراً.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["حبيب بن مظاهر","أصحاب الحسين"]}]},{"station":"kadhimiya","name":"الكاظمية المقدسة","questions":[{"id":"jr-kadhimiya-e01","game":"journey","station":"kadhimiya","difficulty":"easy","type":"mcq","text":"الإمام موسى بن جعفر الكاظم (ع) هو الإمام:","options":["السادس","السابع","الثامن","التاسع"],"answer":1,"explanation":"هو الإمام السابع من أئمة أهل البيت (ع)، وأبوه الإمام الصادق (ع) وابنه الإمام الرضا (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الكاظم","ترتيب الأئمة"]},{"id":"jr-kadhimiya-e02","game":"journey","station":"kadhimiya","difficulty":"easy","type":"mcq","text":"ما اللقب المشهور للإمام الكاظم (ع) الذي يُقصد به عند طلب الحوائج؟","options":["الصادق","باب الحوائج","الزكي","العسكري"],"answer":1,"explanation":"لُقّب (ع) بباب الحوائج إلى الله، كما لُقّب بالكاظم لكظمه الغيظ وصبره على الأذى، وبالعبد الصالح.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الألقاب","باب الحوائج"]},{"id":"jr-kadhimiya-e03","game":"journey","station":"kadhimiya","difficulty":"easy","type":"tf","text":"الإمام محمد الجواد (ع) مدفون في الكاظمية إلى جوار جدّه الإمام موسى الكاظم (ع).","answer":true,"explanation":"نعم، والحرم الكاظمي يضمّ الإمامين الكاظم والجواد (ع)، ولذلك يُقال: الإمامان الكاظمان.","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الكاظمية","المرقد"]},{"id":"jr-kadhimiya-m01","game":"journey","station":"kadhimiya","difficulty":"medium","type":"mcq","text":"في سجن من استُشهد الإمام الكاظم (ع) ببغداد؟","options":["عيسى بن جعفر","الفضل بن الربيع","السندي بن شاهك","الفضل بن يحيى"],"answer":2,"explanation":"استُشهد (ع) مسموماً في سجن السندي بن شاهك ببغداد سنة 183 هـ بعد سنين من التنقّل بين السجون.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الاستشهاد","السجن"]},{"id":"jr-kadhimiya-m02","game":"journey","station":"kadhimiya","difficulty":"medium","type":"mcq","text":"من الخليفة العباسي الذي سجن الإمام الكاظم (ع) حتى استُشهد في سجنه؟","options":["المنصور","المهدي العباسي","هارون الرشيد","المأمون"],"answer":2,"explanation":"هارون الرشيد، الذي خشي من مكانة الإمام (ع) في الأمة فسجنه سنين حتى دُسّ إليه السمّ.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["هارون الرشيد","الاضطهاد"]},{"id":"jr-kadhimiya-m03","game":"journey","station":"kadhimiya","difficulty":"medium","type":"tf","text":"الإمام الجواد (ع) اسمه محمد بن علي، وهو ابن الإمام الرضا (ع).","answer":true,"explanation":"نعم، هو محمد بن علي بن موسى (ع)، الإمام التاسع، ويُلقّب بالجواد والتقي.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الجواد","النسب"]},{"id":"jr-kadhimiya-h01","game":"journey","station":"kadhimiya","difficulty":"hard","type":"mcq","text":"تولّى الإمام الجواد (ع) الإمامة وهو أصغر الأئمة (ع) سنّاً، فكم كان عمره تقريباً؟","options":["نحو خمس سنوات","نحو ثماني سنوات","نحو خمس عشرة سنة","نحو عشرين سنة"],"answer":1,"explanation":"تولّى الإمامة (ع) وعمره نحو ثماني سنوات بعد استشهاد أبيه الرضا (ع) سنة 203 هـ، وهو من دلائل إمامته.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمامة المبكرة","الإمام الجواد"]},{"id":"jr-kadhimiya-h02","game":"journey","station":"kadhimiya","difficulty":"hard","type":"mcq","text":"من قاضي القضاة الذي ناظر الإمام الجواد (ع) في مجلس المأمون فأفحمه الإمام وهو غلام؟","options":["أبو يوسف","يحيى بن أكثم","ابن أبي دؤاد","الشافعي"],"answer":1,"explanation":"يحيى بن أكثم، سأله في مسألة المُحرِم الذي قتل صيداً، ففصّل الإمام (ع) وجوهها حتى بُهت الحاضرون.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["المناظرة","يحيى بن أكثم"]},{"id":"jr-kadhimiya-h03","game":"journey","station":"kadhimiya","difficulty":"hard","type":"mcq","text":"أين وُلد الإمام موسى بن جعفر الكاظم (ع)؟","options":["المدينة المنورة","الأبواء بين مكة والمدينة","الكوفة","بغداد"],"answer":1,"explanation":"وُلد (ع) بالأبواء سنة 128 هـ في طريق الحج، وأمّه السيدة حميدة.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الولادة","الأبواء"]}]},{"station":"mashhad","name":"مشهد المقدسة","questions":[{"id":"jr-mashhad-e01","game":"journey","station":"mashhad","difficulty":"easy","type":"mcq","text":"الإمام علي بن موسى الرضا (ع) هو الإمام:","options":["السابع","الثامن","التاسع","العاشر"],"answer":1,"explanation":"هو الإمام الثامن من أئمة أهل البيت (ع)، وأبوه الإمام الكاظم (ع) وابنه الإمام الجواد (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الرضا","ترتيب الأئمة"]},{"id":"jr-mashhad-e02","game":"journey","station":"mashhad","difficulty":"easy","type":"mcq","text":"أين يقع مرقد الإمام الرضا (ع)؟","options":["بغداد","سامراء","طوس (مشهد)","قم"],"answer":2,"explanation":"دُفن (ع) في سناباد طوس بخراسان، وهي مدينة مشهد اليوم، ولذلك سُمّيت مشهد الإمام الرضا (ع).","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["المرقد","طوس"]},{"id":"jr-mashhad-e03","game":"journey","station":"mashhad","difficulty":"easy","type":"tf","text":"عرض المأمون العباسي ولاية العهد على الإمام الرضا (ع) فقبلها مُكرهاً وبشروط.","answer":true,"explanation":"قبلها (ع) بعد إلحاح وتهديد، واشترط ألّا يولّي ولا يعزل ولا يُغيّر شيئاً قائماً، فكان قبوله حجّة على المأمون.","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["ولاية العهد","المأمون"]},{"id":"jr-mashhad-m01","game":"journey","station":"mashhad","difficulty":"medium","type":"mcq","text":"في أي مدينة روى الإمام الرضا (ع) «حديث سلسلة الذهب» على جموع المحدّثين؟","options":["مرو","نيسابور","طوس","بغداد"],"answer":1,"explanation":"رواه (ع) في نيسابور وهو في طريقه إلى خراسان، فكتبه عنه عشرات الآلاف، وسُمّي بسلسلة الذهب لعلوّ سنده.","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["سلسلة الذهب","نيسابور"]},{"id":"jr-mashhad-m02","game":"journey","station":"mashhad","difficulty":"medium","type":"mcq","text":"من ألّف كتاب «عيون أخبار الرضا (ع)»؟","options":["الشيخ الكليني","الشيخ الصدوق","الشيخ الطوسي","الشيخ المفيد"],"answer":1,"explanation":"ألّفه الشيخ الصدوق محمد بن علي بن بابويه القمي، وهو من أهم مصادر سيرة الإمام الرضا (ع) وأخباره.","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["المصنفات","الصدوق"]},{"id":"jr-mashhad-m03","game":"journey","station":"mashhad","difficulty":"medium","type":"mcq","text":"من الشاعر الذي أنشد قصيدته التائية «مدارسُ آياتٍ خَلَتْ من تلاوةٍ» بين يدي الإمام الرضا (ع)؟","options":["الكميت الأسدي","دعبل الخزاعي","الفرزدق","السيد الحميري"],"answer":1,"explanation":"هو دعبل بن علي الخزاعي، شاعر أهل البيت (ع)، وقد أجازه الإمام (ع) وأعطاه من ثيابه.","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["دعبل الخزاعي","الشعر"]},{"id":"jr-mashhad-h01","game":"journey","station":"mashhad","difficulty":"hard","type":"mcq","text":"قال الإمام الرضا (ع) في حديث سلسلة الذهب: كلمةُ لا إله إلا الله حصني، فمن دخل حصني أمِن من عذابي. ثم أردف بعد أن سار قليلاً:","options":["بشروطها وأنا من شروطها","ومن أنكرها فقد كفر","وأنا باب حصنها","ولا حول ولا قوة إلا بالله"],"answer":0,"explanation":"أردف (ع): بشروطها، وأنا من شروطها. أي أن التوحيد لا يُقبل إلا بالولاية للإمام المعصوم.","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["سلسلة الذهب","التوحيد","الولاية"]},{"id":"jr-mashhad-h02","game":"journey","station":"mashhad","difficulty":"hard","type":"mcq","text":"في أي سنة هجرية استُشهد الإمام الرضا (ع)؟","options":["183 هـ","193 هـ","203 هـ","220 هـ"],"answer":2,"explanation":"استُشهد (ع) مسموماً بطوس سنة 203 هـ في أيام المأمون، وصلّى عليه ابنه الإمام الجواد (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الاستشهاد","203 هجرية"]},{"id":"jr-mashhad-h03","game":"journey","station":"mashhad","difficulty":"hard","type":"mcq","text":"من صاحب الإمام الرضا (ع) وخادمه الذي روى تفاصيل أيامه الأخيرة ودفنه؟","options":["أبو الصلت عبد السلام بن صالح الهروي","الفضل بن سهل","ياسر الخادم","الريان بن الصلت"],"answer":0,"explanation":"هو أبو الصلت الهروي (رض)، من خواص أصحابه، ونقل الصدوق عنه كثيراً في عيون أخبار الرضا (ع).","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["أبو الصلت الهروي","الأصحاب"]}]},{"station":"samarra","name":"سامراء المقدسة","questions":[{"id":"jr-samarra-e01","game":"journey","station":"samarra","difficulty":"easy","type":"mcq","text":"الإمام علي الهادي (ع) هو الإمام:","options":["التاسع","العاشر","الحادي عشر","الثاني عشر"],"answer":1,"explanation":"هو الإمام العاشر، علي بن محمد الهادي (ع)، ويُلقّب أيضاً بالنقي، وأبوه الإمام الجواد (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الهادي","ترتيب الأئمة"]},{"id":"jr-samarra-e02","game":"journey","station":"samarra","difficulty":"easy","type":"mcq","text":"لماذا لُقّب الإمام الحسن بن علي (ع) بـ«العسكري»؟","options":["لأنه قاد جيشاً","لسكناه في محلّة العسكر بسامراء","لأنه وُلد في معسكر","لشجاعته في الحرب"],"answer":1,"explanation":"لُقّب بذلك لأنه أُلزم بالسكنى في سامراء التي كانت تُسمّى العسكر، تحت رقابة السلطة العباسية.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام العسكري","الألقاب"]},{"id":"jr-samarra-e03","game":"journey","station":"samarra","difficulty":"easy","type":"tf","text":"الإمام المهدي (عج) هو ابن الإمام الحسن العسكري (ع).","answer":true,"explanation":"نعم، هو محمد بن الحسن العسكري (ع)، الإمام الثاني عشر والحجة القائم المنتظر.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["الإمام المهدي","النسب"]},{"id":"jr-samarra-m01","game":"journey","station":"samarra","difficulty":"medium","type":"mcq","text":"من الخليفة العباسي الذي استقدم الإمام الهادي (ع) من المدينة إلى سامراء وأبقاه تحت المراقبة؟","options":["المأمون","المعتصم","المتوكل","المعتز"],"answer":2,"explanation":"المتوكل العباسي، الذي اشتدّ على أهل البيت (ع) وشيعتهم، وأشخص الإمام (ع) إلى سامراء.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["المتوكل","سامراء"]},{"id":"jr-samarra-m02","game":"journey","station":"samarra","difficulty":"medium","type":"mcq","text":"«الزيارة الجامعة الكبيرة» التي تُقرأ عند زيارة أي إمام من الأئمة (ع)، عن أي إمام رُويت؟","options":["الإمام الصادق (ع)","الإمام الرضا (ع)","الإمام الهادي (ع)","الإمام العسكري (ع)"],"answer":2,"explanation":"رُويت عن الإمام علي الهادي (ع)، وهي من أجمع النصوص في وصف مقامات الأئمة (ع).","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["الزيارة الجامعة","الإمام الهادي"]},{"id":"jr-samarra-m03","game":"journey","station":"samarra","difficulty":"medium","type":"mcq","text":"في أي سنة هجرية وُلد الإمام المهدي (عج)؟","options":["232 هـ","254 هـ","255 هـ","260 هـ"],"answer":2,"explanation":"وُلد (عج) في سامراء سنة 255 هـ في النصف من شعبان على المشهور عند الإمامية.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["ولادة المهدي","255 هجرية"]},{"id":"jr-samarra-h01","game":"journey","station":"samarra","difficulty":"hard","type":"mcq","text":"من أول السفراء الأربعة للإمام المهدي (عج) في الغيبة الصغرى؟","options":["محمد بن عثمان العمري","عثمان بن سعيد العمري","الحسين بن روح النوبختي","علي بن محمد السمري"],"answer":1,"explanation":"أولهم عثمان بن سعيد العمري (رض)، ثم ابنه محمد، ثم الحسين بن روح النوبختي، ثم علي بن محمد السمري رابعهم وآخرهم.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["السفراء الأربعة","الغيبة الصغرى"]},{"id":"jr-samarra-h02","game":"journey","station":"samarra","difficulty":"hard","type":"mcq","text":"استُشهد الإمام الحسن العسكري (ع) سنة 260 هـ، فكم كان عمره الشريف؟","options":["ثماني عشرة سنة","ثمان وعشرون سنة","أربعون سنة","خمسون سنة"],"answer":1,"explanation":"وُلد (ع) سنة 232 هـ واستُشهد سنة 260 هـ، فكان عمره ثماني وعشرين سنة، وهو أقصر الأئمة عمراً بعد الجواد (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الاستشهاد","الإمام العسكري"]},{"id":"jr-samarra-h03","game":"journey","station":"samarra","difficulty":"hard","type":"mcq","text":"ما الاسم المشهور لوالدة الإمام المهدي (عج)؟","options":["حَديثة","نرجس","سَمانة","حَميدة"],"answer":1,"explanation":"المشهور أنها السيدة نرجس (ع)، ووردت لها أسماء أخرى في الروايات كمليكة وصقيل وريحانة.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["نرجس","أم المهدي"]}]}],"qa":[{"category":"aqaid","name":"العقائد","questions":[{"id":"qa-aq-01","game":"qa","category":"aqaid","difficulty":"easy","type":"mcq","text":"كم عدد أصول الدين عند الإمامية؟","options":["ثلاثة","أربعة","خمسة","عشرة"],"answer":2,"explanation":"خمسة: التوحيد، والعدل، والنبوة، والإمامة، والمعاد.","source":{"book":"التوحيد","author":"الشيخ الصدوق"},"tags":["أصول الدين"]},{"id":"qa-aq-02","game":"qa","category":"aqaid","difficulty":"easy","type":"mcq","text":"من هم المعصومون الأربعة عشر (ع)؟","options":["الأئمة الاثنا عشر وأبواهم","النبي (ص) والزهراء (ع) والأئمة الاثنا عشر","النبي وأصحابه الثلاثة عشر","الأنبياء أولو العزم والأئمة"],"answer":1,"explanation":"هم النبي محمد (ص)، والسيدة فاطمة الزهراء (ع)، والأئمة الاثنا عشر (ع).","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["العصمة","المعصومون"]},{"id":"qa-aq-03","game":"qa","category":"aqaid","difficulty":"easy","type":"tf","text":"العدل الإلهي يعني أن الله تعالى لا يظلم أحداً ولا يفعل القبيح.","answer":true,"explanation":"نعم، والعدل أصل مستقل عند الإمامية لأنه ينفي الجبر ويثبت حرية الإنسان ومسؤوليته.","source":{"book":"التوحيد","author":"الشيخ الصدوق"},"tags":["العدل"]},{"id":"qa-aq-04","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"ما معنى «الرجعة» في عقيدة الإمامية؟","options":["رجوع الروح إلى بدن آخر","رجوع طائفة من الأموات إلى الدنيا عند ظهور الإمام المهدي (عج)","رجوع الناس إلى دينهم بعد الانحراف","الرجوع إلى الله بالتوبة"],"answer":1,"explanation":"الرجعة رجوع طائفة من محض الإيمان ومحض الكفر إلى الدنيا عند قيام القائم (عج)، وهي غير التناسخ.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["الرجعة"]},{"id":"qa-aq-05","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"قال الإمام الصادق (ع): «التقية ديني ودين آبائي». فما معنى التقية؟","options":["كتمان العلم عن الناس","إظهار خلاف ما يُبطن صوناً للنفس أو الدين عند الخوف من الضرر","ترك العبادة عند المشقة","الابتعاد عن الناس"],"answer":1,"explanation":"التقية وقاية للنفس والدين عند خوف الضرر، وهي مشروعة بالكتاب والسنة، وليست نفاقاً ولا كذباً.","source":{"book":"الكافي","author":"الشيخ الكليني"},"tags":["التقية"]},{"id":"qa-aq-06","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"متى بدأت الغيبة الكبرى للإمام المهدي (عج)؟","options":["سنة 260 هـ","سنة 300 هـ","سنة 329 هـ","سنة 400 هـ"],"answer":2,"explanation":"بدأت سنة 329 هـ بوفاة السفير الرابع علي بن محمد السمري، بعد غيبة صغرى دامت نحو سبعين سنة.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["الغيبة الكبرى"]},{"id":"qa-aq-07","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"من آخر السفراء الأربعة في الغيبة الصغرى؟","options":["عثمان بن سعيد العمري","محمد بن عثمان العمري","الحسين بن روح النوبختي","علي بن محمد السمري"],"answer":3,"explanation":"هو علي بن محمد السمري (رض)، وبوفاته انتهت السفارة الخاصة وبدأت الغيبة الكبرى.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["السفراء الأربعة"]},{"id":"qa-aq-08","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"الأنبياء «أولو العزم» خمسة، فمن هم؟","options":["آدم وإدريس ونوح وهود وصالح","نوح وإبراهيم وموسى وعيسى ومحمد (ص)","إبراهيم وإسماعيل وإسحاق ويعقوب ويوسف","موسى وهارون وداود وسليمان وعيسى"],"answer":1,"explanation":"هم أصحاب الشرائع والكتب: نوح وإبراهيم وموسى وعيسى ومحمد (ص).","source":{"book":"الخصال","author":"الشيخ الصدوق"},"tags":["أولو العزم","النبوة"]},{"id":"qa-aq-09","game":"qa","category":"aqaid","difficulty":"medium","type":"tf","text":"الإمامة عند الإمامية منصب إلهي يكون بالنص من الله ورسوله، لا بالاختيار والانتخاب.","answer":true,"explanation":"نعم، فالإمام كالنبي يُنصّ عليه، ومنه حديث الغدير وحديث الثقلين وأحاديث الأئمة الاثني عشر.","source":{"book":"الكافي","author":"الشيخ الكليني","ref":"كتاب الحجة"},"tags":["الإمامة","النص"]},{"id":"qa-aq-10","game":"qa","category":"aqaid","difficulty":"hard","type":"mcq","text":"ما معنى «البداء» في عقيدة الإمامية؟","options":["تغيّر علم الله تعالى","ظهور أمر من الله للناس لم يكونوا يعلمونه، مع كونه معلوماً لله أزلاً","ندم الله على قضاء سبق","تبديل الأحكام الشرعية"],"answer":1,"explanation":"البداء إظهارٌ للناس لا تغيّرٌ في علم الله، ومنه قوله تعالى: يمحو الله ما يشاء ويُثبت.","source":{"book":"التوحيد","author":"الشيخ الصدوق"},"tags":["البداء"]},{"id":"qa-aq-11","game":"qa","category":"aqaid","difficulty":"hard","type":"mcq","text":"كم دامت الغيبة الصغرى تقريباً؟","options":["نحو أربعين سنة","نحو سبعين سنة","نحو مئة سنة","نحو عشر سنوات"],"answer":1,"explanation":"من سنة 260 هـ إلى 329 هـ، أي نحو تسع وستين سنة، تولّى فيها السفراء الأربعة الوساطة.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["الغيبة الصغرى"]},{"id":"qa-aq-12","game":"qa","category":"aqaid","difficulty":"hard","type":"mcq","text":"قال النبي (ص) في حديث الثقلين: إني تاركٌ فيكم الثقلين. فما هما؟","options":["القرآن والسنة","كتاب الله وعترتي أهل بيتي","الصلاة والزكاة","المهاجرون والأنصار"],"answer":1,"explanation":"قال (ص): كتاب الله وعترتي أهل بيتي، لن يفترقا حتى يردا عليّ الحوض، وهو من أصول الاستدلال على الإمامة.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["حديث الثقلين"]},{"id":"qa-aq-13","game":"qa","category":"aqaid","difficulty":"hard","type":"tf","text":"يرى أعلام الإمامية كالصدوق والمفيد والطوسي والطبرسي أن القرآن الذي بين الدفتين هو الكتاب المنزل لا زيادة فيه ولا نقصان.","answer":true,"explanation":"نعم، وهذا هو المذهب المعتمد عند محققي الإمامية قديماً وحديثاً.","source":{"book":"التوحيد","author":"الشيخ الصدوق","ref":"وتصريحات المفيد والطوسي والطبرسي في كتبهم"},"tags":["القرآن","العقيدة"]},{"id":"qa-aq-14","game":"qa","category":"aqaid","difficulty":"hard","type":"mcq","text":"ما المقصود بـ«المعاد» في أصول الدين؟","options":["رجوع الأرواح في الدنيا","البعث والنشور والحساب والجزاء يوم القيامة","عودة الإمام المهدي (عج)","انتقال الروح بين الأبدان"],"answer":1,"explanation":"المعاد هو البعث الجسماني والحساب والجزاء، وهو ضروري من ضروريات الدين.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["المعاد"]},{"id":"qa-aq-15","game":"qa","category":"aqaid","difficulty":"hard","type":"mcq","text":"ما الأصلان اللذان يتميّز بذكرهما مذهب أهل البيت (ع) في عدّ أصول الدين؟","options":["التوحيد والنبوة","العدل والإمامة","المعاد والنبوة","التوحيد والمعاد"],"answer":1,"explanation":"العدل والإمامة، ولذلك يُقال للإمامية: العدلية، وللمذهب: مذهب أهل البيت (ع).","source":{"book":"التوحيد","author":"الشيخ الصدوق"},"tags":["أصول الدين","العدلية"]},{"id":"qa-aq-16","game":"qa","category":"aqaid","difficulty":"medium","type":"mcq","text":"الأحاديث المتواترة في عدد الأئمة (ع) تنصّ على أنهم:","options":["سبعة","تسعة","اثنا عشر","أربعة عشر"],"answer":2,"explanation":"اثنا عشر إماماً، أولهم أمير المؤمنين علي (ع) وآخرهم المهدي (عج)، وقد رواها الكليني في كتاب الحجة.","source":{"book":"الكافي","author":"الشيخ الكليني","ref":"كتاب الحجة"},"tags":["الأئمة الاثنا عشر"]}]},{"category":"fiqh","name":"الفقه والأحكام","note":"أسئلة هذا القسم معرفية، وللعمل يُرجع إلى فتوى المرجع الذي يُقلّده المكلّف.","questions":[{"id":"qa-fq-01","game":"qa","category":"fiqh","difficulty":"easy","type":"mcq","text":"كم عدد فروع الدين؟","options":["خمسة","سبعة","عشرة","اثنا عشر"],"answer":2,"explanation":"عشرة: الصلاة، الصوم، الزكاة، الخمس، الحج، الجهاد، الأمر بالمعروف، النهي عن المنكر، التولي، التبري.","source":{"book":"وسائل الشيعة","author":"الشيخ الحر العاملي"},"tags":["فروع الدين"]},{"id":"qa-fq-02","game":"qa","category":"fiqh","difficulty":"easy","type":"mcq","text":"كم عدد ركعات الصلوات اليومية الواجبة؟","options":["سبع عشرة ركعة","أربع عشرة ركعة","عشرون ركعة","أربع وثلاثون ركعة"],"answer":0,"explanation":"سبع عشرة ركعة: الصبح 2، الظهر 4، العصر 4، المغرب 3، العشاء 4.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["الصلاة"]},{"id":"qa-fq-03","game":"qa","category":"fiqh","difficulty":"easy","type":"tf","text":"التولي والتبري من فروع الدين العشرة.","answer":true,"explanation":"نعم، التولي: حب أهل البيت (ع) وموالاتهم، والتبري: البراءة من أعدائهم.","source":{"book":"وسائل الشيعة","author":"الشيخ الحر العاملي"},"tags":["التولي والتبري"]},{"id":"qa-fq-04","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"ما المساجد التي يُخيَّر فيها المسافر بين القصر والتمام؟","options":["المسجد الحرام ومسجد النبي (ص) ومسجد الكوفة وحرم الإمام الحسين (ع)","المساجد الجامعة في كل بلد","المسجد الحرام والمسجد الأقصى فقط","مساجد المدن المقدسة كلها"],"answer":0,"explanation":"هذه هي المواطن الأربعة التي ورد فيها التخيير للمسافر بين القصر والإتمام.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["صلاة المسافر","المواطن الأربعة"]},{"id":"qa-fq-05","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"إلى كم سهم يُقسّم الخمس؟","options":["سهم واحد","سهمين: سهم الإمام (ع) وسهم السادة","ثلاثة أسهم","خمسة أسهم"],"answer":1,"explanation":"يُقسّم إلى سهم الإمام (ع) وسهم السادة، ويُصرف سهم الإمام في زمن الغيبة بإذن المرجع.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["الخمس"]},{"id":"qa-fq-06","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"كم عدد ركعات النوافل اليومية المستحبة؟","options":["سبع عشرة","أربع وعشرون","أربع وثلاثون","أربعون"],"answer":2,"explanation":"أربع وثلاثون ركعة، وهي ضعف الفريضة، ومنها نافلة الليل إحدى عشرة ركعة.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["النوافل"]},{"id":"qa-fq-07","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"في كم شيء تجب الزكاة؟","options":["في خمسة","في سبعة","في تسعة","في أحد عشر"],"answer":2,"explanation":"في تسعة: الإبل والبقر والغنم، والحنطة والشعير والتمر والزبيب، والذهب والفضة.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["الزكاة"]},{"id":"qa-fq-08","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"كم عدد أشواط الطواف حول الكعبة؟","options":["ثلاثة","خمسة","سبعة","تسعة"],"answer":2,"explanation":"سبعة أشواط، يبدأ كل شوط من الحجر الأسود وينتهي إليه.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["الحج","الطواف"]},{"id":"qa-fq-09","game":"qa","category":"fiqh","difficulty":"medium","type":"tf","text":"الواجب في الرجلين في الوضوء هو المسح لا الغسل عند الإمامية.","answer":true,"explanation":"عملاً بظاهر قوله تعالى: وامسحوا برؤوسكم وأرجلكم إلى الكعبين، وبما ورد عن أهل البيت (ع).","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"القرآن الكريم","author":"سورة المائدة: 6","ref":"وتهذيب الأحكام للطوسي"},"tags":["الوضوء","المسح"]},{"id":"qa-fq-10","game":"qa","category":"fiqh","difficulty":"medium","type":"mcq","text":"متى تجب صلاة الآيات؟","options":["عند دخول شهر رمضان","عند الكسوف والخسوف والزلزلة والآيات المخوّفة","عند السفر","عند دخول المسجد"],"answer":1,"explanation":"تجب عند كسوف الشمس وخسوف القمر والزلزلة وكل آية سماوية مخوّفة.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["صلاة الآيات"]},{"id":"qa-fq-11","game":"qa","category":"fiqh","difficulty":"hard","type":"mcq","text":"أيٌّ ممّا يلي يُعدّ من مبطلات الصوم عند الإمامية؟","options":["النوم في النهار","البقاء على الجنابة عمداً حتى طلوع الفجر","شمّ الطيب","الاغتسال"],"answer":1,"explanation":"البقاء على الجنابة عمداً إلى الفجر من مبطلات صوم شهر رمضان وقضائه.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["الصوم","المبطلات"]},{"id":"qa-fq-12","game":"qa","category":"fiqh","difficulty":"hard","type":"mcq","text":"ما مقدار زكاة الفطرة عن كل شخص؟","options":["نصف صاع","صاع","صاعان","مُدّ"],"answer":1,"explanation":"صاع عن كل رأس من قوت البلد، ويُقدَّر بنحو ثلاثة كيلوغرامات.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["زكاة الفطرة"]},{"id":"qa-fq-13","game":"qa","category":"fiqh","difficulty":"hard","type":"mcq","text":"ورد أن أول ما يُحاسب عليه العبد يوم القيامة من عمله:","options":["الزكاة","الصلاة","الصوم","الحج"],"answer":1,"explanation":"ورد أن أول ما يُحاسب عليه العبد الصلاة، فإن قُبلت قُبل ما سواها.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["الصلاة","الحساب"]},{"id":"qa-fq-14","game":"qa","category":"fiqh","difficulty":"hard","type":"mcq","text":"الحج واجب على المستطيع:","options":["كل سنة","مرة واحدة في العمر","مرتين في العمر","كلما استطاع"],"answer":1,"explanation":"حجة الإسلام واجبة مرة واحدة في العمر على من استطاع إليه سبيلاً، وما زاد فمستحب.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["الحج","الاستطاعة"]},{"id":"qa-fq-15","game":"qa","category":"fiqh","difficulty":"hard","type":"mcq","text":"«التيمم» يقوم مقام الوضوء أو الغسل في حالات، منها:","options":["الاستعجال فقط","فقد الماء أو تعذّر استعماله لضرر","البرد الشديد فقط","السفر مطلقاً"],"answer":1,"explanation":"يُشرع التيمم عند فقد الماء أو العجز عن استعماله لمرض أو ضرر أو ضيق الوقت.","note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["التيمم"]},{"id":"qa-fq-16","game":"qa","category":"fiqh","difficulty":"easy","type":"mcq","text":"كم عدد ركعات صلاة المغرب؟","options":["ركعتان","ثلاث ركعات","أربع ركعات","خمس ركعات"],"answer":1,"explanation":"ثلاث ركعات، ولا تُقصر في السفر لأنها ثلاثية.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["الصلاة","المغرب"]}]},{"category":"quran","name":"القرآن الكريم وعلومه","questions":[{"id":"qa-qr-01","game":"qa","category":"quran","difficulty":"easy","type":"mcq","text":"كم عدد سور القرآن الكريم؟","options":["مئة","مئة وأربع عشرة","مئة وعشرون","مئة وثلاثون"],"answer":1,"explanation":"مئة وأربع عشرة سورة، أولها الفاتحة وآخرها الناس.","source":{"book":"القرآن الكريم","author":"المصحف الشريف"},"tags":["علوم القرآن"]},{"id":"qa-qr-02","game":"qa","category":"quran","difficulty":"easy","type":"mcq","text":"ما أطول سورة في القرآن الكريم؟","options":["آل عمران","البقرة","النساء","الأعراف"],"answer":1,"explanation":"سورة البقرة، وفيها آية الكرسي وأطول آية في القرآن وهي آية الدَّين.","source":{"book":"القرآن الكريم","author":"المصحف الشريف"},"tags":["السور"]},{"id":"qa-qr-03","game":"qa","category":"quran","difficulty":"easy","type":"mcq","text":"ما أول ما نزل من القرآن الكريم على النبي (ص)؟","options":["يا أيها المدثر","اقرأ باسم ربك الذي خلق","الحمد لله رب العالمين","قل هو الله أحد"],"answer":1,"explanation":"أول ما نزل مطلع سورة العلق في غار حراء.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["أول ما نزل","العلق"]},{"id":"qa-qr-04","game":"qa","category":"quran","difficulty":"easy","type":"mcq","text":"كم عدد آيات سورة الفاتحة؟","options":["خمس","ست","سبع","عشر"],"answer":2,"explanation":"سبع آيات، ولذلك سُمّيت السبع المثاني.","source":{"book":"القرآن الكريم","author":"المصحف الشريف"},"tags":["الفاتحة"]},{"id":"qa-qr-05","game":"qa","category":"quran","difficulty":"medium","type":"mcq","text":"في أي سورة وردت «آية الولاية»: إنما وليّكم الله ورسوله والذين آمنوا الذين يقيمون الصلاة ويؤتون الزكاة وهم راكعون؟","options":["البقرة","النساء","المائدة","التوبة"],"answer":2,"explanation":"في سورة المائدة (55)، ونزلت في أمير المؤمنين (ع) حين تصدّق بخاتمه وهو راكع.","source":{"book":"القرآن الكريم","author":"سورة المائدة: 55","ref":"والاحتجاج للطبرسي"},"tags":["آية الولاية"]},{"id":"qa-qr-06","game":"qa","category":"quran","difficulty":"medium","type":"mcq","text":"في أي سورة وردت «آية التطهير»: إنما يريد الله ليُذهب عنكم الرجس أهل البيت ويُطهّركم تطهيراً؟","options":["الأحزاب","الشورى","النور","الفتح"],"answer":0,"explanation":"في سورة الأحزاب (33)، ونزلت في أصحاب الكساء الخمسة (ع).","source":{"book":"القرآن الكريم","author":"سورة الأحزاب: 33","ref":"وبحار الأنوار للمجلسي"},"tags":["آية التطهير"]},{"id":"qa-qr-07","game":"qa","category":"quran","difficulty":"medium","type":"mcq","text":"«قل لا أسألكم عليه أجراً إلا المودة في القربى» في أي سورة؟","options":["الشورى","الزخرف","الحجرات","محمد"],"answer":0,"explanation":"في سورة الشورى (23)، وهي آية المودة، والقربى فيها أهل البيت (ع).","source":{"book":"القرآن الكريم","author":"سورة الشورى: 23"},"tags":["آية المودة"]},{"id":"qa-qr-08","game":"qa","category":"quran","difficulty":"medium","type":"mcq","text":"«اليوم أكملت لكم دينكم وأتممت عليكم نعمتي» نزلت في:","options":["فتح مكة","يوم الغدير","غزوة بدر","صلح الحديبية"],"answer":1,"explanation":"نزلت يوم غدير خم بعد نصب النبي (ص) أمير المؤمنين (ع) علماً للأمة، وهي في سورة المائدة (3).","source":{"book":"القرآن الكريم","author":"سورة المائدة: 3","ref":"والاحتجاج للطبرسي"},"tags":["إكمال الدين","الغدير"]},{"id":"qa-qr-09","game":"qa","category":"quran","difficulty":"medium","type":"tf","text":"سورة التوبة (براءة) هي السورة الوحيدة التي لا تبدأ بالبسملة.","answer":true,"explanation":"نعم، وهي السورة الوحيدة في المصحف التي لم تُفتتح بـ بسم الله الرحمن الرحيم.","source":{"book":"القرآن الكريم","author":"المصحف الشريف"},"tags":["البسملة","التوبة"]},{"id":"qa-qr-10","game":"qa","category":"quran","difficulty":"medium","type":"mcq","text":"ما أقصر سورة في القرآن الكريم؟","options":["الإخلاص","الكوثر","العصر","الناس"],"answer":1,"explanation":"سورة الكوثر، وهي ثلاث آيات، ونزلت تسليةً للنبي (ص) وبشارةً بالخير الكثير.","source":{"book":"القرآن الكريم","author":"المصحف الشريف"},"tags":["الكوثر"]},{"id":"qa-qr-11","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"«يا أيها الرسول بلّغ ما أُنزل إليك من ربك وإن لم تفعل فما بلّغت رسالته» هي آية التبليغ، وقد نزلت:","options":["في أول البعثة","قبل خطبة الغدير","في غزوة أحد","عند فتح مكة"],"answer":1,"explanation":"نزلت في مرجع النبي (ص) من حجة الوداع قبيل إعلانه الولاية في غدير خم، وهي في سورة المائدة (67).","source":{"book":"القرآن الكريم","author":"سورة المائدة: 67","ref":"والاحتجاج للطبرسي"},"tags":["آية التبليغ","الغدير"]},{"id":"qa-qr-12","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"أي سورة نزلت في أهل البيت (ع) حين آثروا بطعامهم المسكين واليتيم والأسير؟","options":["سورة الإنسان (الدهر)","سورة الماعون","سورة البلد","سورة الضحى"],"answer":0,"explanation":"سورة الإنسان، وفيها: ويُطعمون الطعام على حبه مسكيناً ويتيماً وأسيراً.","source":{"book":"القرآن الكريم","author":"سورة الإنسان: 8","ref":"وبحار الأنوار للمجلسي"},"tags":["سورة الإنسان","الإيثار"]},{"id":"qa-qr-13","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"في أي سورة وردت آية الكرسي؟","options":["الفاتحة","البقرة","آل عمران","يس"],"answer":1,"explanation":"في سورة البقرة (255)، وهي أعظم آية في كتاب الله.","source":{"book":"القرآن الكريم","author":"سورة البقرة: 255"},"tags":["آية الكرسي"]},{"id":"qa-qr-14","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"أي سورة تُعرف بـ«قلب القرآن»؟","options":["الرحمن","يس","الواقعة","الملك"],"answer":1,"explanation":"سورة يس، وقد ورد في فضلها وقراءتها روايات كثيرة عن أهل البيت (ع).","source":{"book":"ثواب الأعمال","author":"الشيخ الصدوق"},"tags":["يس"]},{"id":"qa-qr-15","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"«إنا أنزلناه في ليلة القدر» في أي سورة؟","options":["الدخان","القدر","البروج","الفجر"],"answer":1,"explanation":"في سورة القدر، وليلة القدر خير من ألف شهر، وتُرجى في العشر الأواخر من رمضان.","source":{"book":"القرآن الكريم","author":"سورة القدر"},"tags":["ليلة القدر"]},{"id":"qa-qr-16","game":"qa","category":"quran","difficulty":"hard","type":"mcq","text":"آية المباهلة «فقل تعالوا ندعُ أبناءنا وأبناءكم» في أي سورة؟","options":["البقرة","آل عمران","النساء","التوبة"],"answer":1,"explanation":"في سورة آل عمران (61)، وخرج النبي (ص) للمباهلة بعلي وفاطمة والحسنين (ع).","source":{"book":"القرآن الكريم","author":"سورة آل عمران: 61"},"tags":["المباهلة"]}]},{"category":"history","name":"الأصحاب والرواة والتاريخ","questions":[{"id":"qa-hs-01","game":"qa","category":"history","difficulty":"easy","type":"mcq","text":"من الصحابي الذي قال فيه النبي (ص): «سلمان منّا أهل البيت»؟","options":["أبو ذر الغفاري","سلمان الفارسي المحمدي","المقداد بن الأسود","عمار بن ياسر"],"answer":1,"explanation":"سلمان المحمدي (رض)، وهو من أركان الولاية الأربعة الذين ثبتوا مع أمير المؤمنين (ع).","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["سلمان"]},{"id":"qa-hs-02","game":"qa","category":"history","difficulty":"easy","type":"mcq","text":"من الصحابي الذي أخبر النبي (ص) أنه تقتله «الفئة الباغية»؟","options":["حجر بن عدي","عمار بن ياسر","أبو ذر الغفاري","ميثم التمار"],"answer":1,"explanation":"عمار بن ياسر (رض)، واستُشهد في صفين مع أمير المؤمنين (ع)، فكان علامة فارقة على أهل الحق.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["عمار بن ياسر","صفين"]},{"id":"qa-hs-03","game":"qa","category":"history","difficulty":"easy","type":"mcq","text":"من الصحابي الذي نُفي إلى الرَّبَذة لصدعه بالحق ومات فيها وحيداً؟","options":["أبو ذر الغفاري","سلمان المحمدي","المقداد","أُبيّ بن كعب"],"answer":0,"explanation":"أبو ذر جندب بن جنادة الغفاري (رض)، الذي قال فيه النبي (ص): ما أظلّت الخضراء ولا أقلّت الغبراء على ذي لهجة أصدق من أبي ذر.","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["أبو ذر"]},{"id":"qa-hs-04","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"من صاحب «دعاء كميل» الذي رواه عن أمير المؤمنين (ع)؟","options":["كميل بن زياد النخعي","الأصبغ بن نباتة","مالك الأشتر","حجر بن عدي"],"answer":0,"explanation":"كميل بن زياد النخعي (رض)، من خواص أمير المؤمنين (ع)، ويُستحب قراءة الدعاء ليلة الجمعة.","source":{"book":"مصباح المتهجد","author":"الشيخ الطوسي"},"tags":["كميل","الأدعية"]},{"id":"qa-hs-05","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"من صاحب أمير المؤمنين (ع) الذي قُطع لسانه وصُلب على نخلة لولائه لأهل البيت (ع)؟","options":["رشيد الهجري","ميثم التمار","حجر بن عدي","قنبر"],"answer":1,"explanation":"ميثم التمار (رض)، وقد أخبره أمير المؤمنين (ع) بمقتله وصلبه قبل وقوعه فكان كما قال.","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["ميثم التمار"]},{"id":"qa-hs-06","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"من المتكلّم الذي برع في الدفاع عن الإمامة في مجالس المناظرة وأثنى عليه الإمام الصادق (ع)؟","options":["هشام بن الحكم","زرارة بن أعين","أبان بن تغلب","جابر الجعفي"],"answer":0,"explanation":"هشام بن الحكم (رض)، وقال فيه الإمام الصادق (ع): هذا ناصرنا بقلبه ولسانه ويده.","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["هشام بن الحكم","الكلام"]},{"id":"qa-hs-07","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"من الذي قال له الإمام الصادق (ع): «اجلس في مسجد المدينة وأفتِ الناس، فإني أحب أن يُرى في شيعتي مثلك»؟","options":["محمد بن مسلم","أبان بن تغلب","زرارة","أبو بصير"],"answer":1,"explanation":"أبان بن تغلب (رض)، وهو من كبار رواة أهل البيت (ع) وأعلامهم في التفسير والقراءة.","source":{"book":"رجال النجاشي","author":"أحمد بن علي النجاشي"},"tags":["أبان بن تغلب"]},{"id":"qa-hs-08","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"كم يُقال إن عدد من روى عن الإمام الصادق (ع) من أهل العلم؟","options":["أربعمئة","ألف","أربعة آلاف","عشرة آلاف"],"answer":2,"explanation":"المشهور أن نحو أربعة آلاف رجل رووا عن الإمام الصادق (ع)، ولذلك نُسب المذهب إليه.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["الإمام الصادق","الرواة"]},{"id":"qa-hs-09","game":"qa","category":"history","difficulty":"medium","type":"tf","text":"جابر بن عبد الله الأنصاري صحابي عُمّر حتى أدرك الإمام الباقر (ع).","answer":true,"explanation":"نعم، وبلّغه سلام النبي (ص) كما أوصاه، وهو أول من زار قبر الإمام الحسين (ع) في الأربعين.","source":{"book":"الإرشاد","author":"الشيخ المفيد","ref":"ج2"},"tags":["جابر الأنصاري"]},{"id":"qa-hs-10","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"ما المقصود بـ«الأصول الأربعمئة»؟","options":["أربعمئة مسألة فقهية","أربعمئة كتاب دوّنها أصحاب الأئمة (ع) من أحاديثهم","أربعمئة راوٍ ثقة","أربعمئة آية في الأحكام"],"answer":1,"explanation":"هي الكتب التي دوّنها أصحاب الأئمة (ع) مباشرةً عنهم، وعليها اعتمدت الكتب الأربعة لاحقاً.","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["الأصول الأربعمئة"]},{"id":"qa-hs-11","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"من الصحابي الذي قُتل صبراً بمَرْج عذراء لولائه لأمير المؤمنين (ع) ورفضه البراءة منه؟","options":["حجر بن عدي الكندي","عمرو بن الحمق الخزاعي","رشيد الهجري","قنبر مولى علي"],"answer":0,"explanation":"حجر بن عدي الكندي (رض) وأصحابه، قُتلوا بمرج عذراء قرب دمشق في زمن معاوية.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["حجر بن عدي"]},{"id":"qa-hs-12","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"من الذي ثار في الكوفة وطلب بثأر الإمام الحسين (ع) فقتل قتلته؟","options":["زيد بن علي","المختار بن أبي عبيد الثقفي","سليمان بن صرد الخزاعي","إبراهيم بن الأشتر"],"answer":1,"explanation":"المختار الثقفي، وقد ظفر بعمر بن سعد وشمر وابن زياد وغيرهم من قتلة الحسين (ع).","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["المختار الثقفي","الثأر"]},{"id":"qa-hs-13","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"«الأركان الأربعة» الذين ثبتوا على ولاية أمير المؤمنين (ع) بعد وفاة النبي (ص) هم:","options":["سلمان وأبو ذر والمقداد وعمار","سلمان وحذيفة وأُبيّ وخالد","أبو ذر وعمار وجابر وأنس","المقداد وبلال وصهيب وخبّاب"],"answer":0,"explanation":"هم سلمان المحمدي وأبو ذر الغفاري والمقداد بن الأسود وعمار بن ياسر (رض).","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["الأركان الأربعة"]},{"id":"qa-hs-14","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"من الزاهد اليماني الذي أثنى عليه النبي (ص) ولم يره، واستُشهد في صفين مع أمير المؤمنين (ع)؟","options":["أويس القرني","مالك الأشتر","صعصعة بن صوحان","عدي بن حاتم"],"answer":0,"explanation":"أويس القرني (رض)، سيد التابعين، وقد قدم من اليمن ليقاتل مع أمير المؤمنين (ع) حتى استُشهد.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["أويس القرني","صفين"]},{"id":"qa-hs-15","game":"qa","category":"history","difficulty":"hard","type":"mcq","text":"من أشهر فقهاء أصحاب الإمامين الباقر والصادق (ع) ممّن عُدّوا في «أصحاب الإجماع»؟","options":["أبو هريرة وأنس","زرارة بن أعين ومحمد بن مسلم وبريد العجلي","المغيرة وعمرو بن عبيد","واصل بن عطاء وعمرو بن دينار"],"answer":1,"explanation":"زرارة ومحمد بن مسلم وبريد العجلي وأبو بصير من أصحاب الإجماع الذين أجمعت الطائفة على تصديقهم.","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["أصحاب الإجماع","زرارة"]},{"id":"qa-hs-16","game":"qa","category":"history","difficulty":"medium","type":"mcq","text":"من كاتب أمير المؤمنين (ع) وراوي عهده إلى مالك الأشتر ووصيته؟","options":["الأصبغ بن نباتة","قنبر","كميل بن زياد","الحارث الهمداني"],"answer":0,"explanation":"الأصبغ بن نباتة (رض)، من خواص أمير المؤمنين (ع)، روى عنه العهد والوصية.","source":{"book":"رجال النجاشي","author":"أحمد بن علي النجاشي"},"tags":["الأصبغ بن نباتة"]}]},{"category":"books","name":"الكتب والمصنّفات","questions":[{"id":"qa-bk-01","game":"qa","category":"books","difficulty":"easy","type":"mcq","text":"ما هي «الكتب الأربعة» المعتمدة عند الإمامية؟","options":["الكافي ومن لا يحضره الفقيه وتهذيب الأحكام والاستبصار","الكافي وبحار الأنوار ووسائل الشيعة والوافي","نهج البلاغة والصحيفة السجادية والكافي والإرشاد","التوحيد والخصال والأمالي وعلل الشرائع"],"answer":0,"explanation":"هي الأصول الحديثية الأربعة: الكافي للكليني، ومن لا يحضره الفقيه للصدوق، وتهذيب الأحكام والاستبصار للطوسي.","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["الكتب الأربعة"]},{"id":"qa-bk-02","game":"qa","category":"books","difficulty":"easy","type":"mcq","text":"من مؤلف كتاب «الكافي»؟","options":["الشيخ الصدوق","الشيخ الكليني","الشيخ الطوسي","الشيخ المفيد"],"answer":1,"explanation":"ثقة الإسلام محمد بن يعقوب الكليني (ت 329 هـ)، وألّفه في عشرين سنة.","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["الكافي","الكليني"]},{"id":"qa-bk-03","game":"qa","category":"books","difficulty":"easy","type":"mcq","text":"من مؤلف موسوعة «بحار الأنوار»؟","options":["الحر العاملي","العلّامة المجلسي","الفيض الكاشاني","السيد ابن طاووس"],"answer":1,"explanation":"العلّامة محمد باقر المجلسي (ت 1111 هـ)، وهي أوسع موسوعة حديثية جامعة عند الإمامية.","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["بحار الأنوار"]},{"id":"qa-bk-04","game":"qa","category":"books","difficulty":"easy","type":"mcq","text":"من ألّف كتاب «الإرشاد في معرفة حجج الله على العباد»؟","options":["الشيخ المفيد","الشيخ الطبرسي","الشيخ الصدوق","السيد المرتضى"],"answer":0,"explanation":"الشيخ المفيد (ت 413 هـ)، وهو من أهم مصادر سيرة الأئمة الاثني عشر (ع).","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الإرشاد","المفيد"]},{"id":"qa-bk-05","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"إلى كم قسم يُقسّم كتاب «الكافي»؟","options":["قسمان: الأصول والفروع","ثلاثة: الأصول والفروع والروضة","أربعة أقسام","قسم واحد"],"answer":1,"explanation":"الأصول (العقائد)، والفروع (الفقه)، والروضة (المواعظ والرسائل والمتفرقات).","source":{"book":"الكافي","author":"الشيخ الكليني"},"tags":["الكافي","التقسيم"]},{"id":"qa-bk-06","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"من صاحب لقب «شيخ الطائفة»؟","options":["الشيخ المفيد","الشيخ الصدوق","الشيخ الطوسي","الشيخ الكليني"],"answer":2,"explanation":"محمد بن الحسن الطوسي (ت 460 هـ)، مؤسس الحوزة العلمية في النجف الأشرف وصاحب التهذيب والاستبصار.","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["الطوسي","الألقاب"]},{"id":"qa-bk-07","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"من مؤلف كتابَي «تهذيب الأحكام» و«الاستبصار»؟","options":["الشيخ الكليني","الشيخ الصدوق","الشيخ الطوسي","الحر العاملي"],"answer":2,"explanation":"شيخ الطائفة الطوسي، وهما كتابان فقهيان حديثيان من الكتب الأربعة.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"},"tags":["التهذيب","الاستبصار"]},{"id":"qa-bk-08","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"بماذا تُلقّب «الصحيفة السجادية»؟","options":["أخت القرآن وزبور آل محمد (ص)","أم الكتاب","ديوان العرب","صحيفة الأحكام"],"answer":0,"explanation":"تُلقّب بزبور آل محمد (ص) وأخت القرآن وإنجيل أهل البيت (ع)، وهي أدعية الإمام السجاد (ع).","source":{"book":"الصحيفة السجادية","author":"الإمام زين العابدين (ع)"},"tags":["الصحيفة السجادية"]},{"id":"qa-bk-09","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"من مؤلف كتاب «وسائل الشيعة»؟","options":["الفيض الكاشاني","الشيخ الحر العاملي","المحقق الحلي","العلّامة الحلي"],"answer":1,"explanation":"الشيخ محمد بن الحسن الحر العاملي (ت 1104 هـ)، جمع فيه أحاديث الأحكام مرتبةً على أبواب الفقه.","source":{"book":"وسائل الشيعة","author":"الشيخ الحر العاملي"},"tags":["وسائل الشيعة"]},{"id":"qa-bk-10","game":"qa","category":"books","difficulty":"medium","type":"mcq","text":"من مؤلف «مفاتيح الجنان»؟","options":["الشيخ عباس القمي","السيد ابن طاووس","الشيخ الطوسي","الكفعمي"],"answer":0,"explanation":"المحدّث الشيخ عباس القمي (ت 1359 هـ)، وهو أشهر كتب الأدعية والزيارات المتداولة.","source":{"book":"مفاتيح الجنان","author":"الشيخ عباس القمي"},"tags":["مفاتيح الجنان"]},{"id":"qa-bk-11","game":"qa","category":"books","difficulty":"hard","type":"mcq","text":"من صاحب لقب «ثقة الإسلام»؟","options":["الشيخ الصدوق","الشيخ الكليني","الشيخ المفيد","النجاشي"],"answer":1,"explanation":"لُقّب به الشيخ محمد بن يعقوب الكليني لعظيم منزلته ووثاقته عند الطائفة.","source":{"book":"رجال النجاشي","author":"أحمد بن علي النجاشي"},"tags":["الكليني","الألقاب"]},{"id":"qa-bk-12","game":"qa","category":"books","difficulty":"hard","type":"mcq","text":"كتاب «كمال الدين وتمام النعمة» الذي أُلّف في إثبات الغيبة، لمن؟","options":["الشيخ المفيد","الشيخ الصدوق","النعماني","الشيخ الطوسي"],"answer":1,"explanation":"للشيخ الصدوق، وهو من أهم المصادر في ولادة الإمام المهدي (عج) وغيبته.","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["كمال الدين","الغيبة"]},{"id":"qa-bk-13","game":"qa","category":"books","difficulty":"hard","type":"mcq","text":"كتاب «مصباح المتهجّد» في الأدعية وأعمال السنة، لمن؟","options":["الشيخ الطوسي","الكفعمي","السيد ابن طاووس","الشيخ عباس القمي"],"answer":0,"explanation":"لشيخ الطائفة الطوسي، ومنه نُقل كثير من الأدعية المشهورة كدعاء كميل.","source":{"book":"مصباح المتهجد","author":"الشيخ الطوسي"},"tags":["مصباح المتهجد"]},{"id":"qa-bk-14","game":"qa","category":"books","difficulty":"hard","type":"mcq","text":"كتاب «اللهوف على قتلى الطفوف» في مقتل الإمام الحسين (ع)، لمن؟","options":["أبو مخنف","السيد ابن طاووس","الشيخ المفيد","أبو الفرج الأصفهاني"],"answer":1,"explanation":"للسيد علي بن موسى ابن طاووس (ت 664 هـ)، وهو من أشهر كتب المقتل.","source":{"book":"اللهوف","author":"السيد ابن طاووس"},"tags":["اللهوف","المقتل"]},{"id":"qa-bk-15","game":"qa","category":"books","difficulty":"hard","type":"tf","text":"الشريف الرضي جامع نهج البلاغة هو أخو الشريف المرتضى علم الهدى.","answer":true,"explanation":"نعم، وهما ابنا الحسين الموسوي، ومن أعلام الإمامية في بغداد في القرن الرابع والخامس.","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["الشريف الرضي","الشريف المرتضى"]},{"id":"qa-bk-16","game":"qa","category":"books","difficulty":"hard","type":"mcq","text":"كتاب «الاحتجاج» الذي جمع مناظرات النبي (ص) والأئمة (ع)، لمن؟","options":["الشيخ الطبرسي","الشيخ الصدوق","الشيخ المفيد","الشيخ الكليني"],"answer":0,"explanation":"لأحمد بن علي الطبرسي، وفيه احتجاجات أهل البيت (ع) على مخالفيهم بالحجة والبرهان.","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["الاحتجاج","المناظرات"]}]}],"hints":{"game":"hints","name":"لَمِّح إليّ","cards":[{"id":"hn-01","difficulty":"easy","keywords":["شِقشِقية","بلاغة","المتقين"],"answer":"نهج البلاغة","accept":["نهج البلاغه","كتاب نهج البلاغة","خطب الإمام علي"],"extra_hint":"جمعه الشريف الرضي","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي"},"tags":["كتب"]},{"id":"hn-02","difficulty":"easy","keywords":["زبور","أدعية","زين العابدين"],"answer":"الصحيفة السجادية","accept":["الصحيفه السجاديه","صحيفة الإمام السجاد"],"extra_hint":"تُلقّب بأخت القرآن","source":{"book":"الصحيفة السجادية","author":"الإمام زين العابدين (ع)"},"tags":["كتب"]},{"id":"hn-03","difficulty":"easy","keywords":["فارسي","منّا أهل البيت","المدائن"],"answer":"سلمان المحمدي","accept":["سلمان الفارسي","سلمان"],"extra_hint":"بحث عن الحق في الأديان حتى وصل إلى النبي (ص)","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["أصحاب"]},{"id":"hn-04","difficulty":"easy","keywords":["الربذة","صدق اللهجة","النفي"],"answer":"أبو ذر الغفاري","accept":["ابو ذر","جندب بن جنادة"],"extra_hint":"نُفي ومات وحيداً في الصحراء","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["أصحاب"]},{"id":"hn-05","difficulty":"easy","keywords":["لواء","علقمة","قمر بني هاشم"],"answer":"أبو الفضل العباس (ع)","accept":["العباس","ابو الفضل العباس","قمر بني هاشم","أبو الفضل"],"extra_hint":"ساقي عطاشى كربلاء","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["كربلاء"]},{"id":"hn-06","difficulty":"easy","keywords":["سرداب","غيبة","المنتظر"],"answer":"الإمام المهدي (عج)","accept":["المهدي","صاحب الزمان","القائم","الحجة بن الحسن"],"extra_hint":"وُلد في سامراء سنة 255 هـ","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["الأئمة"]},{"id":"hn-07","difficulty":"easy","keywords":["عباءة","تطهير","خمسة"],"answer":"أصحاب الكساء","accept":["حديث الكساء","آل الكساء","الخمسة اصحاب الكساء"],"extra_hint":"نزلت فيهم آية التطهير","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["أهل البيت"]},{"id":"hn-08","difficulty":"easy","keywords":["خُمّ","مولى","حجة الوداع"],"answer":"بيعة الغدير","accept":["غدير خم","يوم الغدير","الغدير"],"extra_hint":"في الثامن عشر من ذي الحجة","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["أحداث"]},{"id":"hn-09","difficulty":"medium","keywords":["نجران","ابتهال","أبناءنا"],"answer":"المباهلة","accept":["يوم المباهلة","آية المباهلة"],"extra_hint":"خرج النبي (ص) بعلي وفاطمة والحسنين (ع)","source":{"book":"القرآن الكريم","author":"سورة آل عمران: 61"},"tags":["أحداث"]},{"id":"hn-10","difficulty":"medium","keywords":["كليني","أصول","روضة"],"answer":"كتاب الكافي","accept":["الكافي","اصول الكافي"],"extra_hint":"أول الكتب الأربعة","source":{"book":"الكافي","author":"الشيخ الكليني"},"tags":["كتب"]},{"id":"hn-11","difficulty":"medium","keywords":["مجلسي","موسوعة","مئة وعشرة مجلدات"],"answer":"بحار الأنوار","accept":["البحار","بحار الانوار"],"extra_hint":"أوسع موسوعة حديثية جامعة","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["كتب"]},{"id":"hn-12","difficulty":"medium","keywords":["جابر","عطية","مشي"],"answer":"زيارة الأربعين","accept":["الأربعين","اربعينية الحسين","زيارة الاربعين"],"extra_hint":"في العشرين من صفر","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["زيارات"]},{"id":"hn-13","difficulty":"medium","keywords":["حراء","اقرأ","الأربعون"],"answer":"المبعث النبوي","accept":["البعثة","المبعث","بعثة النبي","نزول الوحي"],"extra_hint":"في السابع والعشرين من رجب","source":{"book":"إعلام الورى","author":"الشيخ الطبرسي"},"tags":["السيرة"]},{"id":"hn-14","difficulty":"medium","keywords":["فراش","فداء","يشري نفسه"],"answer":"ليلة المبيت","accept":["مبيت علي على فراش النبي","ليلة الهجرة","ليلة المبيت"],"extra_hint":"نزلت فيها آية في سورة البقرة","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["السيرة"]},{"id":"hn-15","difficulty":"medium","keywords":["صحيفة","حصار","ثلاث سنوات"],"answer":"شِعب أبي طالب","accept":["حصار الشعب","شعب ابي طالب","الشعب"],"extra_hint":"أكلوا فيه ورق الشجر","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["السيرة"]},{"id":"hn-16","difficulty":"medium","keywords":["نِحلة","إرث","مسجد أبيها"],"answer":"الخطبة الفدكية","accept":["خطبة الزهراء","الخطبة الفدكيه","فدك"],"extra_hint":"ألقتها الزهراء (ع) في مسجد أبيها","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["الزهراء"]},{"id":"hn-17","difficulty":"medium","keywords":["ليلة الجمعة","نخعي","مغفرة"],"answer":"دعاء كميل","accept":["كميل بن زياد","دعاء كميل بن زياد"],"extra_hint":"علّمه أمير المؤمنين (ع) لصاحبه","source":{"book":"مصباح المتهجد","author":"الشيخ الطوسي"},"tags":["أدعية"]},{"id":"hn-18","difficulty":"medium","keywords":["حصن","باب","الكرّار"],"answer":"فتح خيبر","accept":["خيبر","قلع باب خيبر","غزوة خيبر"],"extra_hint":"لأعطينّ الراية غداً رجلاً يحب الله ورسوله","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الغزوات"]},{"id":"hn-19","difficulty":"medium","keywords":["تبوك","هارون","موسى"],"answer":"حديث المنزلة","accept":["المنزلة","حديث المنزله"],"extra_hint":"قاله النبي (ص) لعلي (ع) عند استخلافه على المدينة","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأحاديث"]},{"id":"hn-20","difficulty":"medium","keywords":["تحكيم","قاسطون","رفع المصاحف"],"answer":"معركة صفين","accept":["صفين","حرب صفين","واقعة صفين"],"extra_hint":"رُفعت فيها المصاحف على الرماح","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي"},"tags":["أحداث"]},{"id":"hn-21","difficulty":"medium","keywords":["مصر","الرعية","النخعي"],"answer":"عهد مالك الأشتر","accept":["عهد الاشتر","كتاب مالك الاشتر","عهد الإمام علي لمالك"],"extra_hint":"أطول وثيقة في نهج البلاغة","source":{"book":"نهج البلاغة","author":"جمع الشريف الرضي","ref":"الكتاب 53"},"tags":["نهج البلاغة"]},{"id":"hn-22","difficulty":"medium","keywords":["السندي","بغداد","باب الحوائج"],"answer":"الإمام موسى الكاظم (ع)","accept":["الكاظم","موسى بن جعفر","الإمام الكاظم"],"extra_hint":"سُجن سنين في عهد هارون الرشيد","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأئمة"]},{"id":"hn-23","difficulty":"medium","keywords":["يحيى بن أكثم","صِغَر","مناظرة"],"answer":"الإمام محمد الجواد (ع)","accept":["الجواد","محمد بن علي الجواد","الإمام الجواد"],"extra_hint":"تولّى الإمامة وهو ابن ثماني سنين","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأئمة"]},{"id":"hn-24","difficulty":"medium","keywords":["طوس","ولاية العهد","سلسلة الذهب"],"answer":"الإمام علي بن موسى الرضا (ع)","accept":["الرضا","الإمام الرضا","علي بن موسى"],"extra_hint":"مرقده في مشهد بخراسان","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["الأئمة"]},{"id":"hn-25","difficulty":"medium","keywords":["المتوكل","الجامعة الكبيرة","النقي"],"answer":"الإمام علي الهادي (ع)","accept":["الهادي","الإمام الهادي","علي بن محمد الهادي"],"extra_hint":"أُشخص من المدينة إلى سامراء","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأئمة"]},{"id":"hn-26","difficulty":"medium","keywords":["سرّ من رأى","أبو محمد","أبو القائم"],"answer":"الإمام الحسن العسكري (ع)","accept":["العسكري","الحسن العسكري","الإمام العسكري"],"extra_hint":"أبو الإمام المهدي (عج)","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأئمة"]},{"id":"hn-27","difficulty":"hard","keywords":["العمري","سفارة","صغرى"],"answer":"السفراء الأربعة","accept":["النواب الاربعة","السفراء الاربعه","النواب الخاصون"],"extra_hint":"آخرهم علي بن محمد السمري","source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"},"tags":["الغيبة"]},{"id":"hn-28","difficulty":"hard","keywords":["تكبير","34","رحى"],"answer":"تسبيح الزهراء (ع)","accept":["تسبيح فاطمة","تسبيح الزهراء","تسبيحة الزهراء"],"extra_hint":"يُستحب بعد كل صلاة","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"},"tags":["العبادات"]},{"id":"hn-29","difficulty":"hard","keywords":["محراب","الكوفة","الحادي والعشرون"],"answer":"استشهاد أمير المؤمنين (ع)","accept":["شهادة الإمام علي","استشهاد الإمام علي","ضربة ابن ملجم"],"extra_hint":"فزت وربّ الكعبة","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["أحداث"]},{"id":"hn-30","difficulty":"hard","keywords":["صلح","حقن الدماء","المجتبى"],"answer":"صلح الإمام الحسن (ع)","accept":["صلح الحسن","الصلح مع معاوية","صلح الإمام الحسن"],"extra_hint":"كان سنة 41 هـ","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["أحداث"]},{"id":"hn-31","difficulty":"hard","keywords":["المدينة","أربعة","قبور"],"answer":"أئمة البقيع (ع)","accept":["ائمة البقيع","البقيع","الأئمة الأربعة في البقيع"],"extra_hint":"المجتبى والسجاد والباقر والصادق (ع)","source":{"book":"الإرشاد","author":"الشيخ المفيد"},"tags":["الأئمة"]},{"id":"hn-32","difficulty":"hard","keywords":["شام","خطبة","عقيلة"],"answer":"السيدة زينب (ع)","accept":["زينب","العقيلة زينب","زينب الكبرى"],"extra_hint":"أفشلت خطبتها مشروع يزيد","source":{"book":"الاحتجاج","author":"الشيخ الطبرسي"},"tags":["كربلاء"]},{"id":"hn-33","difficulty":"hard","keywords":["توبة","فارس","صبيحة عاشوراء"],"answer":"الحر بن يزيد الرياحي","accept":["الحر الرياحي","الحر بن يزيد","الحر"],"extra_hint":"كان في جيش ابن سعد ثم عاد إلى الحسين (ع)","source":{"book":"اللهوف","author":"السيد ابن طاووس"},"tags":["كربلاء"]},{"id":"hn-34","difficulty":"hard","keywords":["جوارح","خمسون","زين العابدين"],"answer":"رسالة الحقوق","accept":["رساله الحقوق","رسالة الحقوق للإمام السجاد"],"extra_hint":"للإمام زين العابدين (ع)","source":{"book":"الخصال","author":"الشيخ الصدوق"},"tags":["كتب"]},{"id":"hn-35","difficulty":"hard","keywords":["تهذيب","استبصار","شيخ الطائفة"],"answer":"الشيخ الطوسي","accept":["الطوسي","محمد بن الحسن الطوسي","شيخ الطائفة"],"extra_hint":"مؤسس حوزة النجف الأشرف","source":{"book":"الفهرست","author":"الشيخ الطوسي"},"tags":["أعلام"]},{"id":"hn-36","difficulty":"hard","keywords":["سُمَيّة","التعذيب","الفئة الباغية"],"answer":"عمار بن ياسر","accept":["عمار","عمار بن ياسر"],"extra_hint":"أول شهيدة في الإسلام أمّه","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["أصحاب"]},{"id":"hn-37","difficulty":"hard","keywords":["نخلة","لسان","صَلْب"],"answer":"ميثم التمار","accept":["ميثم","ميثم التمار"],"extra_hint":"أخبره أمير المؤمنين (ع) بمقتله قبل وقوعه","source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"},"tags":["أصحاب"]},{"id":"hn-38","difficulty":"hard","keywords":["خاتم","راكعون","تصدّق"],"answer":"آية الولاية","accept":["ايه الولاية","آية الولاية","انما وليكم الله"],"extra_hint":"في سورة المائدة","source":{"book":"القرآن الكريم","author":"سورة المائدة: 55"},"tags":["آيات"]},{"id":"hn-39","difficulty":"hard","keywords":["ثقلان","حوض","لن يفترقا"],"answer":"حديث الثقلين","accept":["الثقلين","حديث الثقلين"],"extra_hint":"كتاب الله وعترتي أهل بيتي","source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"},"tags":["الأحاديث"]},{"id":"hn-40","difficulty":"hard","keywords":["تائية","مدارس آيات","خراسان"],"answer":"دعبل الخزاعي","accept":["دعبل","دعبل الخزاعي","التائية"],"extra_hint":"أنشدها بين يدي الإمام الرضا (ع)","source":{"book":"عيون أخبار الرضا","author":"الشيخ الصدوق"},"tags":["أدب"]}]},"bidding":{"game":"bidding","name":"مَن يزيّد؟","categories":[{"id":"bd-01","difficulty":"easy","title":"أصول الدين عند الإمامية","items":["التوحيد","العدل","النبوة","الإمامة","المعاد"],"source":{"book":"التوحيد","author":"الشيخ الصدوق"}},{"id":"bd-02","difficulty":"easy","title":"فروع الدين","items":["الصلاة","الصوم","الزكاة","الخمس","الحج","الجهاد","الأمر بالمعروف","النهي عن المنكر","التولي","التبري"],"source":{"book":"وسائل الشيعة","author":"الشيخ الحر العاملي"}},{"id":"bd-03","difficulty":"easy","title":"الكتب الأربعة","items":["الكافي","من لا يحضره الفقيه","تهذيب الأحكام","الاستبصار"],"source":{"book":"الفهرست","author":"الشيخ الطوسي"}},{"id":"bd-04","difficulty":"easy","title":"أصحاب الكساء (ع)","items":["النبي محمد (ص)","الإمام علي (ع)","السيدة فاطمة الزهراء (ع)","الإمام الحسن (ع)","الإمام الحسين (ع)"],"source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"}},{"id":"bd-05","difficulty":"easy","title":"المواطن الأربعة التي يُخيَّر فيها المسافر","items":["المسجد الحرام","مسجد النبي (ص)","مسجد الكوفة","حرم الإمام الحسين (ع)"],"source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"}},{"id":"bd-06","difficulty":"easy","title":"الأشهر الحُرُم","items":["ذو القعدة","ذو الحجة","محرم","رجب"],"source":{"book":"القرآن الكريم","author":"سورة التوبة: 36"}},{"id":"bd-07","difficulty":"easy","title":"الأنبياء أولو العزم","items":["نوح (ع)","إبراهيم (ع)","موسى (ع)","عيسى (ع)","محمد (ص)"],"source":{"book":"الخصال","author":"الشيخ الصدوق"}},{"id":"bd-08","difficulty":"easy","title":"العتبات المقدسة في العراق","items":["النجف الأشرف","كربلاء المقدسة","الكاظمية المقدسة","سامراء المقدسة"],"source":{"book":"الإرشاد","author":"الشيخ المفيد"}},{"id":"bd-09","difficulty":"medium","title":"أسماء الأئمة الاثني عشر (ع) بالترتيب","items":["الإمام علي بن أبي طالب (ع)","الإمام الحسن المجتبى (ع)","الإمام الحسين الشهيد (ع)","الإمام علي زين العابدين (ع)","الإمام محمد الباقر (ع)","الإمام جعفر الصادق (ع)","الإمام موسى الكاظم (ع)","الإمام علي الرضا (ع)","الإمام محمد الجواد (ع)","الإمام علي الهادي (ع)","الإمام الحسن العسكري (ع)","الإمام المهدي (عج)"],"source":{"book":"الإرشاد","author":"الشيخ المفيد"}},{"id":"bd-10","difficulty":"medium","title":"السفراء الأربعة في الغيبة الصغرى","items":["عثمان بن سعيد العمري","محمد بن عثمان العمري","الحسين بن روح النوبختي","علي بن محمد السمري"],"source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"}},{"id":"bd-11","difficulty":"medium","title":"ألقاب السيدة فاطمة الزهراء (ع)","items":["الزهراء","الصدّيقة","الطاهرة","الزكية","المباركة","البتول","الراضية","المرضية","المحدَّثة","سيدة نساء العالمين","أم أبيها","الحوراء الإنسية"],"source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"}},{"id":"bd-12","difficulty":"medium","title":"ألقاب أمير المؤمنين الإمام علي (ع)","items":["أمير المؤمنين","أبو تراب","حيدر","الكرّار","المرتضى","يعسوب الدين","سيد الوصيين","قسيم الجنة والنار","باب مدينة العلم","أبو الحسنين","الصدّيق الأكبر","الفاروق"],"source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"}},{"id":"bd-13","difficulty":"medium","title":"ألقاب الإمام المهدي (عج)","items":["المهدي","القائم","الحجة","صاحب الزمان","المنتظر","بقية الله","الخلف الصالح","صاحب الأمر","المأمول"],"source":{"book":"كمال الدين وتمام النعمة","author":"الشيخ الصدوق"}},{"id":"bd-14","difficulty":"medium","title":"الأركان الأربعة من أصحاب أمير المؤمنين (ع)","items":["سلمان المحمدي","أبو ذر الغفاري","المقداد بن الأسود","عمار بن ياسر"],"source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"}},{"id":"bd-15","difficulty":"medium","title":"أسماء سورة الفاتحة","items":["الفاتحة","أم الكتاب","السبع المثاني","الحمد","الشفاء","الكافية","الأساس","الوافية","الصلاة"],"source":{"book":"بحار الأنوار","author":"العلّامة المجلسي"}},{"id":"bd-16","difficulty":"medium","title":"مصنّفات الشيخ الصدوق","items":["من لا يحضره الفقيه","الخصال","التوحيد","عيون أخبار الرضا","كمال الدين وتمام النعمة","الأمالي","معاني الأخبار","علل الشرائع","ثواب الأعمال","صفات الشيعة","الهداية","المقنع"],"source":{"book":"الفهرست","author":"الشيخ الطوسي"}},{"id":"bd-17","difficulty":"medium","title":"مصنّفات الشيخ الطوسي","items":["تهذيب الأحكام","الاستبصار","الفهرست","الرجال","المبسوط","الخلاف","النهاية","التبيان في تفسير القرآن","مصباح المتهجد","الأمالي","الغيبة","العدة في أصول الفقه"],"source":{"book":"رجال النجاشي","author":"أحمد بن علي النجاشي"}},{"id":"bd-18","difficulty":"medium","title":"الغزوات المشهورة في عهد النبي (ص)","items":["بدر","أحد","الخندق (الأحزاب)","بني قينقاع","بني النضير","بني قريظة","خيبر","الحديبية","فتح مكة","حنين","تبوك","ذات الرقاع"],"source":{"book":"إعلام الورى","author":"الشيخ الطبرسي"}},{"id":"bd-19","difficulty":"hard","title":"أصحاب الإمام الحسين (ع) المعروفون في كربلاء","items":["حبيب بن مظاهر الأسدي","زهير بن القين","مسلم بن عوسجة","بُرير بن خضير","الحر بن يزيد الرياحي","نافع بن هلال","عابس بن أبي شبيب","سعيد بن عبد الله الحنفي","جون مولى أبي ذر","وهب بن عبد الله","عمرو بن قرظة الأنصاري","أنس بن الحارث الكاهلي","يزيد بن الحصين الهمداني"],"source":{"book":"الإرشاد","author":"الشيخ المفيد"}},{"id":"bd-20","difficulty":"hard","title":"شهداء بني هاشم في كربلاء","items":["أبو الفضل العباس (ع)","علي الأكبر","القاسم بن الحسن","عبد الله بن الحسن","عبد الله الرضيع","عون بن عبد الله بن جعفر","محمد بن عبد الله بن جعفر","عبد الله بن مسلم بن عقيل","جعفر بن عقيل","عبد الرحمن بن عقيل","عبد الله بن علي","جعفر بن علي","عثمان بن علي"],"source":{"book":"الإرشاد","author":"الشيخ المفيد"}},{"id":"bd-21","difficulty":"hard","title":"كبار رواة الإمام الصادق (ع) وثقاته","items":["زرارة بن أعين","محمد بن مسلم","بريد بن معاوية العجلي","أبو بصير","الفضيل بن يسار","معاوية بن عمار","هشام بن الحكم","هشام بن سالم","مؤمن الطاق","جابر بن يزيد الجعفي","أبان بن تغلب","المفضل بن عمر","حمران بن أعين"],"source":{"book":"اختيار معرفة الرجال","author":"الشيخ الطوسي"}},{"id":"bd-22","difficulty":"hard","title":"الأنبياء المذكورون في القرآن بأسمائهم","items":["آدم","إدريس","نوح","هود","صالح","إبراهيم","لوط","إسماعيل","إسحاق","يعقوب","يوسف","شعيب","أيوب","موسى","هارون","ذو الكفل","داود","سليمان","إلياس","اليسع","يونس","زكريا","يحيى","عيسى","محمد"],"source":{"book":"القرآن الكريم","author":"المصحف الشريف"}},{"id":"bd-23","difficulty":"hard","title":"أسماء يوم القيامة في القرآن الكريم","items":["القيامة","الحاقة","الواقعة","القارعة","الغاشية","الطامة الكبرى","الصاخة","يوم الدين","يوم الحساب","يوم الفصل","يوم الجمع","يوم التلاق","يوم التناد","يوم الحسرة","يوم الخلود"],"source":{"book":"القرآن الكريم","author":"المصحف الشريف"}},{"id":"bd-24","difficulty":"hard","title":"مبطلات الصوم عند الإمامية","items":["الأكل","الشرب","الجماع","الاستمناء","الكذب على الله ورسوله والأئمة (ع)","إيصال الغبار الغليظ إلى الحلق","الارتماس في الماء","البقاء على الجنابة عمداً إلى الفجر","الاحتقان بالمائع","تعمّد القيء"],"note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"تهذيب الأحكام","author":"الشيخ الطوسي"}},{"id":"bd-25","difficulty":"hard","title":"الأشياء التي تجب فيها الزكاة","items":["الإبل","البقر","الغنم","الحنطة","الشعير","التمر","الزبيب","الذهب","الفضة"],"note":"للعمل يُرجع إلى فتوى المرجع.","source":{"book":"من لا يحضره الفقيه","author":"الشيخ الصدوق"}},{"id":"bd-26","difficulty":"hard","title":"الأئمة المعصومون (ع) المدفونون في العراق","items":["الإمام علي (ع) في النجف","الإمام الحسين (ع) في كربلاء","الإمام الكاظم (ع) في الكاظمية","الإمام الجواد (ع) في الكاظمية","الإمام الهادي (ع) في سامراء","الإمام الحسن العسكري (ع) في سامراء"],"source":{"book":"الإرشاد","author":"الشيخ المفيد"}}]}};</script>
+<script>
+/* js/engine/arabic.js */
+/* مُطبِّع النص العربي ومطابقة الإجابات — وَكُن مِنَ العارِفِينَ */
+window.WKM = window.WKM || {};
+WKM.Arabic = (function () {
+  var TASHKEEL = /[ً-ْٰـ]/g;          // الحركات والتطويل
+  var HONORIFIC = /\((?:ع|ص|عج|رض|ره|عليه السلام|صلى الله عليه وآله)\)/g;
+  var PUNCT = /[.,،؛;:!؟?"'«»\[\]{}()\-_/\\]/g;
+
+  function normalize(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(HONORIFIC, ' ')
+      .replace(TASHKEEL, '')
+      .replace(/[أإآٱ]/g, 'ا')
+      .replace(/ى/g, 'ي')
+      .replace(/ة/g, 'ه')
+      .replace(/ؤ/g, 'و')
+      .replace(/ئ/g, 'ي')
+      .replace(PUNCT, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  /* يحذف "ال" التعريف من بداية كل كلمة للمقارنة المتساهلة */
+  function stripAl(s) {
+    return s.split(' ').map(function (w) {
+      return w.length > 3 && w.indexOf('ال') === 0 ? w.slice(2) : w;
+    }).join(' ');
+  }
+
+  function equals(a, b) {
+    var na = normalize(a), nb = normalize(b);
+    if (!na || !nb) return false;
+    if (na === nb) return true;
+    return stripAl(na) === stripAl(nb);
+  }
+
+  /* هل الإجابة صحيحة؟ يقبل النص الصحيح وكل صيغه البديلة */
+  function isCorrect(input, correct, accept) {
+    if (equals(input, correct)) return true;
+    var list = accept || [];
+    for (var i = 0; i < list.length; i++) if (equals(input, list[i])) return true;
+    /* تساهل: إن احتوت إجابة اللاعب النص الصحيح كاملاً */
+    var ni = stripAl(normalize(input));
+    if (ni.length >= 3) {
+      var nc = stripAl(normalize(correct));
+      if (nc.length >= 3 && ni.indexOf(nc) !== -1) return true;
+      for (var j = 0; j < list.length; j++) {
+        var na = stripAl(normalize(list[j]));
+        if (na.length >= 3 && ni.indexOf(na) !== -1) return true;
+      }
+    }
+    return false;
+  }
+
+  /* يطابق مدخلاً واحداً مع قائمة عناصر (لعبة مَن يزيّد؟) ويعيد الفهرس أو -1 */
+  function matchItem(input, items) {
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var name = typeof it === 'string' ? it : it.name;
+      var aliases = typeof it === 'string' ? [] : (it.aliases || []);
+      if (isCorrect(input, name, aliases)) return i;
+    }
+    return -1;
+  }
+
+  return { normalize: normalize, stripAl: stripAl, equals: equals, isCorrect: isCorrect, matchItem: matchItem };
+})();
+
+;
+/* js/engine/rng.js */
+/* عشوائية قابلة للبذر — تُمكّن الحَكَم من إعادة إنتاج الجلسة نفسها */
+window.WKM = window.WKM || {};
+WKM.RNG = (function () {
+  function create(seed) {
+    var s = seed >>> 0 || (Date.now() >>> 0);
+    function next() {                       // mulberry32
+      s |= 0; s = (s + 0x6D2B79F5) | 0;
+      var t = Math.imul(s ^ (s >>> 15), 1 | s);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    return {
+      next: next,
+      int: function (n) { return Math.floor(next() * n); },
+      pick: function (arr) { return arr.length ? arr[Math.floor(next() * arr.length)] : null; },
+      shuffle: function (arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+          var j = Math.floor(next() * (i + 1));
+          var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+      },
+      seed: s
+    };
+  }
+  return { create: create };
+})();
+
+;
+/* js/engine/dedupe.js */
+/* سجلّ الأسئلة المستهلكة — يمنع التكرار عبر الجولات والجلسات */
+window.WKM = window.WKM || {};
+WKM.Dedupe = (function () {
+  var KEY = 'wkm.used.v1';
+  var memory = {};            // بديل آمن إن كان التخزين معطّلاً (file:// أحياناً)
+  var storageOK = true;
+
+  function read() {
+    if (!storageOK) return memory;
+    try {
+      var raw = window.localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { storageOK = false; return memory; }
+  }
+  function write(obj) {
+    memory = obj;
+    if (!storageOK) return;
+    try { window.localStorage.setItem(KEY, JSON.stringify(obj)); }
+    catch (e) { storageOK = false; }
+  }
+
+  return {
+    isUsed: function (id) { return !!read()[id]; },
+    markUsed: function (id) { var o = read(); o[id] = 1; write(o); },
+    usedIds: function () { return Object.keys(read()); },
+    count: function () { return Object.keys(read()).length; },
+    reset: function () { write({}); },
+    exportJSON: function () { return JSON.stringify(read()); },
+    importJSON: function (json) {
+      try { write(JSON.parse(json) || {}); return true; } catch (e) { return false; }
+    },
+    storageAvailable: function () { return storageOK; }
+  };
+})();
+
+;
+/* js/engine/bank.js */
+/* بنك الأسئلة: الفهرسة والاختيار — بنك ثابت بالكامل، بلا توليد لحظي */
+window.WKM = window.WKM || {};
+WKM.Bank = (function () {
+  var all = [];         // كل الأسئلة والبطاقات والتصنيفات
+  var byGame = {};
+
+  function add(item) { all.push(item); (byGame[item.game] = byGame[item.game] || []).push(item); }
+
+  function load(data) {
+    all = []; byGame = {};
+    (data.journey || []).forEach(function (st) {
+      (st.questions || []).forEach(function (q) { add(q); });
+    });
+    (data.qa || []).forEach(function (cat) {
+      (cat.questions || []).forEach(function (q) { add(q); });
+    });
+    ((data.hints && data.hints.cards) || []).forEach(function (c) {
+      c.game = 'hints'; add(c);
+    });
+    ((data.bidding && data.bidding.categories) || []).forEach(function (c) {
+      c.game = 'bidding'; add(c);
+    });
+    return all.length;
+  }
+
+  function filter(opts) {
+    opts = opts || {};
+    var used = opts.exclude || WKM.Dedupe;
+    return (byGame[opts.game] || []).filter(function (q) {
+      if (opts.station && q.station !== opts.station) return false;
+      if (opts.difficulty && q.difficulty !== opts.difficulty) return false;
+      if (opts.category && q.category !== opts.category) return false;
+      if (opts.type && q.type !== opts.type) return false;
+      if (opts.skipUsed !== false && used.isUsed(q.id)) return false;
+      return true;
+    });
+  }
+
+  /* يختار سؤالاً غير مستهلك؛ فإن نفدت الفئة أعاد null (البنك ثابت ولا يُولّد) */
+  function pick(opts, rng) {
+    var pool = filter(opts);
+    if (!pool.length) return null;
+    var r = rng || WKM.RNG.create(Date.now());
+    return r.pick(pool);
+  }
+
+  function byId(id) {
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    return null;
+  }
+
+  function stats() {
+    var s = { total: all.length, games: {}, difficulty: {}, stations: {}, categories: {} };
+    all.forEach(function (q) {
+      s.games[q.game] = (s.games[q.game] || 0) + 1;
+      if (q.difficulty) s.difficulty[q.difficulty] = (s.difficulty[q.difficulty] || 0) + 1;
+      if (q.station) s.stations[q.station] = (s.stations[q.station] || 0) + 1;
+      if (q.category) s.categories[q.category] = (s.categories[q.category] || 0) + 1;
+    });
+    s.remaining = all.filter(function (q) { return !WKM.Dedupe.isUsed(q.id); }).length;
+    return s;
+  }
+
+  return { load: load, filter: filter, pick: pick, byId: byId, stats: stats,
+           all: function () { return all; } };
+})();
+
+;
+/* js/engine/score.js */
+/* احتساب النقاط — كل القيم تُقرأ من data/config.json ولا تُكتب هنا */
+window.WKM = window.WKM || {};
+WKM.Score = (function () {
+  var cfg = null;
+  function init(config) { cfg = config.points; return cfg; }
+  function P() { if (!cfg) throw new Error('WKM.Score: لم تُهيَّأ الإعدادات'); return cfg; }
+
+  return {
+    init: init,
+    /* سؤال حسب الصعوبة (رحلة السفر · اسأل وجاوب) */
+    forQuestion: function (difficulty) { return P().difficulty[difficulty] || 0; },
+    /* مَن يزيّد؟ — نجاح كامل بالمزايدة، مع مكافأة لكل عنصر فوق العدد الملتزم به */
+    forBidding: function (bid, correctCount) {
+      var p = P().bidding;
+      if (correctCount < bid) return 0;
+      return p.base + Math.max(0, correctCount - bid) * p.per_extra_item;
+    },
+    /* لَمِّح إليّ — تنقص النقاط عند كشف التلميح الإضافي */
+    forHint: function (usedExtraHint) {
+      var p = P().hint;
+      return usedExtraHint ? Math.max(0, p.base - p.extra_hint_penalty) : p.base;
+    },
+    stationBonus: function () { return P().station_bonus; },
+    /* كرت [خليها لغيري]: صح ⟵ للمنافس · خطأ ⟵ للمحوِّل */
+    resolvePass: function (correct, fromTeamId, toTeamId) {
+      return { teamId: correct ? toTeamId : fromTeamId, correct: correct };
+    }
+  };
+})();
+
+;
+/* js/engine/cards.js */
+/* كروت المساعدة — 3 كروت لكل فريق في كل لعبة، كل كرت مرة واحدة */
+window.WKM = window.WKM || {};
+WKM.Cards = (function () {
+  var LABELS = {
+    pass: 'خليها لغيري', swap: 'تغيير السؤال', options: 'خيارات للسؤال',
+    ask_help: 'اسأل الجمهور أو صديق', fifty: 'حذف إجابتين'
+  };
+  var cfg = null;
+  function init(config) { cfg = config.cards; return cfg; }
+
+  function freshSet() {
+    var out = {};
+    Object.keys(cfg).forEach(function (game) {
+      if (!Array.isArray(cfg[game])) return;
+      out[game] = {};
+      cfg[game].forEach(function (c) { out[game][c] = cfg.uses_per_card; });
+    });
+    return out;
+  }
+
+  function has(team, game, card) {
+    return !!(team.cards && team.cards[game] && team.cards[game][card] > 0);
+  }
+  function use(team, game, card) {
+    if (!has(team, game, card)) return { ok: false, reason: 'الكرت غير متاح أو استُهلك' };
+    team.cards[game][card] -= 1;
+    return { ok: true, card: card, label: LABELS[card] };
+  }
+  function remaining(team, game) {
+    var out = [];
+    var set = (team.cards && team.cards[game]) || {};
+    Object.keys(set).forEach(function (c) { if (set[c] > 0) out.push({ id: c, label: LABELS[c] }); });
+    return out;
+  }
+  /* خاصية 50:50 — تُبقي الإجابة الصحيحة وخياراً خاطئاً واحداً */
+  function fiftyFifty(question, rng) {
+    if (question.type !== 'mcq' || !question.options) return null;
+    var wrong = [];
+    question.options.forEach(function (_, i) { if (i !== question.answer) wrong.push(i); });
+    var keep = (rng || WKM.RNG.create(1)).pick(wrong);
+    return question.options.map(function (opt, i) {
+      return (i === question.answer || i === keep) ? opt : null;
+    });
+  }
+  /* تحويل سؤال مفتوح أو صح/خطأ إلى خيارات */
+  function toOptions(question) {
+    if (question.type === 'tf') return ['صحيح', 'خطأ'];
+    return question.options || null;
+  }
+
+  return { init: init, freshSet: freshSet, has: has, use: use, remaining: remaining,
+           fiftyFifty: fiftyFifty, toOptions: toOptions, LABELS: LABELS };
+})();
+
+;
+/* js/engine/timer.js */
+/* المؤقّت التنازلي — دقيق بالاعتماد على الساعة لا على عدّ النبضات */
+window.WKM = window.WKM || {};
+WKM.Timer = (function () {
+  function create(opts) {
+    opts = opts || {};
+    var total = 0, endAt = 0, remaining = 0, handle = null, running = false, warned = false;
+    var warnAt = opts.warnAt || 5;
+
+    function tick() {
+      remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      if (opts.onTick) opts.onTick(remaining, total);
+      if (!warned && remaining <= warnAt && remaining > 0) { warned = true; if (opts.onWarn) opts.onWarn(remaining); }
+      if (remaining <= 0) { stop(); if (opts.onEnd) opts.onEnd(); }
+    }
+    function start(seconds) {
+      stop();
+      total = seconds; remaining = seconds; warned = false;
+      endAt = Date.now() + seconds * 1000; running = true;
+      if (opts.onTick) opts.onTick(remaining, total);
+      handle = setInterval(tick, 250);
+    }
+    function pause() {
+      if (!running) return;
+      remaining = Math.max(0, Math.ceil((endAt - Date.now()) / 1000));
+      clearInterval(handle); handle = null; running = false;
+    }
+    function resume() {
+      if (running || remaining <= 0) return;
+      endAt = Date.now() + remaining * 1000; running = true;
+      handle = setInterval(tick, 250);
+    }
+    function stop() { if (handle) clearInterval(handle); handle = null; running = false; }
+
+    return { start: start, pause: pause, resume: resume, stop: stop,
+             remaining: function () { return remaining; },
+             isRunning: function () { return running; } };
+  }
+  return { create: create };
+})();
+
+;
+/* js/engine/state.js */
+/* حالة الجلسة: الفرق والنقاط والأدوار والتقدّم — قابلة للتصدير والاستيراد */
+window.WKM = window.WKM || {};
+WKM.State = (function () {
+  var s = null;
+  var config = null;
+
+  function init(cfg, teamNames, mode, seed) {
+    config = cfg;
+    WKM.Score.init(cfg);
+    WKM.Cards.init(cfg);
+    s = {
+      mode: mode || 'journey',
+      seed: seed || (Date.now() >>> 0),
+      teams: (teamNames || []).map(function (name, i) {
+        return { id: 't' + (i + 1), name: name, score: 0,
+                 cards: WKM.Cards.freshSet(), stats: { correct: 0, wrong: 0, asked: 0 } };
+      }),
+      turn: 0,
+      stationIndex: 0,
+      stationProgress: {},
+      log: [],
+      startedAt: new Date().toISOString(),
+      finished: false
+    };
+    if (s.teams.length < (cfg.rules.min_teams || 2)) {
+      throw new Error('يجب تسجيل فريقين على الأقل');
+    }
+    return s;
+  }
+
+  function get() { return s; }
+  function teams() { return s.teams; }
+  function team(id) { return s.teams.filter(function (t) { return t.id === id; })[0] || null; }
+  function current() { return s.teams[s.turn % s.teams.length]; }
+  function nextTurn() { s.turn += 1; return current(); }
+  function opponentOf(id) {
+    var i = s.teams.findIndex(function (t) { return t.id === id; });
+    return s.teams[(i + 1) % s.teams.length];
+  }
+
+  function award(teamId, points, reason) {
+    var t = team(teamId);
+    if (!t) return null;
+    t.score += points;
+    s.log.push({ at: Date.now(), teamId: teamId, points: points, reason: reason || '' });
+    return t.score;
+  }
+  function record(teamId, correct) {
+    var t = team(teamId); if (!t) return;
+    t.stats.asked += 1;
+    if (correct) t.stats.correct += 1; else t.stats.wrong += 1;
+  }
+
+  function standings() {
+    return s.teams.slice().sort(function (a, b) { return b.score - a.score; });
+  }
+  function isTie() {
+    var st = standings();
+    return st.length > 1 && st[0].score === st[1].score;
+  }
+  function station() { return config.stations[s.stationIndex] || null; }
+  function advanceStation() {
+    s.stationIndex += 1;
+    if (s.stationIndex >= config.stations.length) { s.finished = true; s.stationIndex = config.stations.length - 1; return null; }
+    return station();
+  }
+  function markStationQuestion(teamId) {
+    var key = station().id + ':' + teamId;
+    s.stationProgress[key] = (s.stationProgress[key] || 0) + 1;
+    return s.stationProgress[key];
+  }
+  function stationDone() {
+    var per = config.rules.questions_per_station_per_team;
+    var st = station();
+    return s.teams.every(function (t) { return (s.stationProgress[st.id + ':' + t.id] || 0) >= per; });
+  }
+
+  function exportJSON() { return JSON.stringify({ state: s, used: WKM.Dedupe.exportJSON() }); }
+  function importJSON(json) {
+    try {
+      var o = JSON.parse(json);
+      s = o.state; if (o.used) WKM.Dedupe.importJSON(o.used);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  return { init: init, get: get, teams: teams, team: team, current: current, nextTurn: nextTurn,
+           opponentOf: opponentOf, award: award, record: record, standings: standings, isTie: isTie,
+           station: station, advanceStation: advanceStation, markStationQuestion: markStationQuestion,
+           stationDone: stationDone, exportJSON: exportJSON, importJSON: importJSON };
+})();
+
+;
+/* js/data.js */
+/* محمّل البيانات: في الملف المدموج تكون البيانات مضمّنة، وفي التطوير تُجلب عبر خادم محلي */
+window.WKM = window.WKM || {};
+WKM.Data = (function () {
+  var FILES = {
+    config: ['data/config.json'],
+    journey: ['data/journey/mecca.json', 'data/journey/medina.json', 'data/journey/najaf.json',
+              'data/journey/karbala.json', 'data/journey/kadhimiya.json', 'data/journey/mashhad.json',
+              'data/journey/samarra.json'],
+    qa: ['data/qa/aqaid.json', 'data/qa/fiqh.json', 'data/qa/quran.json',
+         'data/qa/history.json', 'data/qa/books.json'],
+    hints: ['data/hints/hints.json'],
+    bidding: ['data/bidding/bidding.json']
+  };
+
+  function load() {
+    if (window.GAME_DATA) return Promise.resolve(window.GAME_DATA);   // الملف المدموج
+    var keys = Object.keys(FILES);
+    return Promise.all(keys.map(function (k) {
+      return Promise.all(FILES[k].map(function (f) {
+        return fetch('../' + f).then(function (r) { return r.json(); });
+      }));
+    })).then(function (res) {
+      var out = {};
+      keys.forEach(function (k, i) {
+        out[k] = (k === 'config' || k === 'hints' || k === 'bidding') ? res[i][0] : res[i];
+      });
+      window.GAME_DATA = out;
+      return out;
+    });
+  }
+  return { load: load, isEmbedded: function () { return !!window.GAME_DATA; } };
+})();
+
+;
+/* js/app.js */
+/* قشرة التطبيق — المرحلة M3: تهيئة المحرّك وعرض حالة البنك. الواجهة الكاملة في M4 */
+(function () {
+  var $ = function (sel) { return document.querySelector(sel); };
+
+  function stationsPath(config) {
+    return config.stations.map(function (s, i) {
+      var cls = i === 0 ? 'node first' : (i === config.stations.length - 1 ? 'node last' : 'node');
+      return '<span class="' + cls + '">' + s.name + '</span>' +
+             (i < config.stations.length - 1 ? '<span class="sep">◂</span>' : '');
+    }).join('');
+  }
+
+  function selfCheck(data) {
+    var items = [];
+    function t(label, cond) { items.push({ label: label, ok: !!cond }); }
+    try {
+      var total = WKM.Bank.load(data);
+      t('تحميل بنك الأسئلة (' + total + ' عنصراً)', total > 200);
+      WKM.State.init(data.config, ['فريق تجريبي أ', 'فريق تجريبي ب'], 'journey', 1);
+      t('تهيئة الحالة والفرق والكروت', WKM.State.teams().length === 2);
+      var q = WKM.Bank.pick({ game: 'journey', station: 'mecca', difficulty: 'easy' }, WKM.RNG.create(1));
+      t('سحب سؤال من محطة مكة', !!q);
+      t('مطابقة الإجابات العربية رغم اختلاف الإملاء',
+        WKM.Arabic.isCorrect('ابو الفضل العباس', 'أبو الفضل العباس (ع)', []));
+      t('احتساب النقاط من الإعدادات', WKM.Score.forQuestion('hard') === data.config.points.difficulty.hard);
+      t('كروت المساعدة تعمل مرة واحدة',
+        WKM.Cards.use(WKM.State.teams()[0], 'journey', 'swap').ok &&
+        !WKM.Cards.use(WKM.State.teams()[0], 'journey', 'swap').ok);
+      t('سجلّ منع التكرار' + (WKM.Dedupe.storageAvailable() ? '' : ' (بالذاكرة — التخزين المحلي معطّل)'), true);
+    } catch (e) {
+      items.push({ label: 'خطأ: ' + e.message, ok: false });
+    }
+    return items;
+  }
+
+  function render(data) {
+    var checks = selfCheck(data);   // يُحمّل البنك أولاً ثم تُقرأ الإحصاءات
+    var s = WKM.Bank.stats();
+    $('#app').innerHTML =
+      '<div class="wrap">' +
+        '<div class="hero">' +
+          '<h1>وَكُن مِنَ العارِفِينَ</h1>' +
+          '<p class="lead">طريقٌ من نور يمتدّ من الكعبة المشرفة في مكة إلى القباب الذهبية في سامراء، ' +
+          'يحفّه كتابٌ مضمّخ بالأنوار وإسطرلابٌ ذهبي… سبع محطات، وأربع ألعاب، وبنك معرفة موثّق بمصادره.</p>' +
+          '<div class="path">' + stationsPath(data.config) + '</div>' +
+        '</div>' +
+        '<div class="stats">' +
+          '<div class="stat"><b>' + s.total + '</b><span>عنصراً في البنك</span></div>' +
+          '<div class="stat"><b>' + (s.games.journey || 0) + '</b><span>رحلة السفر</span></div>' +
+          '<div class="stat"><b>' + (s.games.qa || 0) + '</b><span>اسأل وجاوب</span></div>' +
+          '<div class="stat"><b>' + (s.games.hints || 0) + '</b><span>لَمِّح إليّ</span></div>' +
+          '<div class="stat"><b>' + (s.games.bidding || 0) + '</b><span>مَن يزيّد؟</span></div>' +
+        '</div>' +
+        '<div class="grid">' +
+          '<div class="card"><h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' +
+            data.config.timers.bidding_count + ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس.</p></div>' +
+          '<div class="card"><h3>رحلة السفر</h3><p>7 محطات، 3 أسئلة لكل فريق في كل محطة، ' +
+            data.config.timers.question + ' ثانية للسؤال، و3 كروت مساعدة.</p></div>' +
+          '<div class="card"><h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، والأسرع في الاستنتاج الصحيح يحصد النقاط.</p></div>' +
+          '<div class="card"><h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
+            data.config.timers.question + ' ثانية، و3 كروت: خيارات، ومساعدة، وحذف إجابتين.</p></div>' +
+        '</div>' +
+        '<div class="check"><strong>فحص المحرّك الذاتي</strong><ul>' +
+          checks.map(function (c) { return '<li class="' + (c.ok ? 'ok' : 'no') + '">' + c.label + '</li>'; }).join('') +
+        '</ul></div>' +
+        '<div class="note">هذه المرحلة <strong>M3</strong>: المحرّك وبنك الأسئلة وأداة البناء. ' +
+          'شاشات اللعب الكاملة (تسجيل الفرق، والمؤقّت، والكروت، ولوحة النقاط) تأتي في المرحلتين <strong>M4</strong> و<strong>M5</strong>.</div>' +
+      '</div>';
+  }
+
+  function fail(msg) {
+    $('#app').innerHTML = '<div class="wrap"><div class="note">تعذّر تحميل البيانات: ' + msg +
+      '<br>في وضع التطوير شغّل خادماً محلياً، أو استخدم الملف المدموج من مجلد dist.</div></div>';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    WKM.Data.load().then(render).catch(function (e) { fail(e.message); });
+  });
+})();
+
+</script>
+</body>
+</html>

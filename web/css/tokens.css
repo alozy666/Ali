@@ -1,0 +1,60 @@
+/* الهوية البصرية — وَكُن مِنَ العارِفِينَ */
+:root {
+  --emerald-deep: #0B3D2E;
+  --emerald: #145743;
+  --navy-deep:  #0A1A3C;
+  --navy:       #12285C;
+  --gold:       #D4AF37;
+  --gold-soft:  #E8C96A;
+  --ivory:      #F5EFE0;
+
+  /* اللوحة الافتراضية: ليلية (هوية اللعبة الأساسية) */
+  --bg:        var(--navy-deep);
+  --bg-card:   rgba(11, 61, 46, .55);
+  --fg:        var(--ivory);
+  --fg-dim:    rgba(245, 239, 224, .74);
+  --gold-text: var(--gold-soft);          /* لون العناوين الذهبية */
+  --line:      rgba(212, 175, 55, .28);
+  --grad-a: #F0D98A; --grad-b: #D4AF37; --grad-c: #9A7B1E;
+  --glow-gold: rgba(212, 175, 55, .16);
+  --glow-green: rgba(20, 87, 67, .45);
+
+  --radius: 16px;
+  --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+  --font: "Noto Naskh Arabic", "Amiri", "Scheherazade New", "Traditional Arabic", system-ui, Tahoma, sans-serif;
+
+  /* أحجام كبيرة عمداً: الجميع يقرأ من شاشة الحَكَم عن بُعد */
+  --fs-title: clamp(2.1rem, 6vw, 4rem);
+  --fs-lead:  clamp(1.05rem, 2.4vw, 1.5rem);
+  --fs-body:  clamp(1rem, 2vw, 1.2rem);
+}
+
+/* الوضع النهاري: ذهب داكن على عاجي ليبقى التباين عالياً */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:        #FBF7EC;
+    --bg-card:   #FFFFFF;
+    --fg:        #10203A;
+    --fg-dim:    #4A5568;
+    --gold-text: #6B5214;
+    --gold:      #8A6D1F;
+    --line:      rgba(11, 61, 46, .20);
+    --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
+    --glow-gold: rgba(212, 175, 55, .10);
+    --glow-green: rgba(20, 87, 67, .10);
+    --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+  }
+}
+:root[data-theme="light"] {
+  --bg:        #FBF7EC;
+  --bg-card:   #FFFFFF;
+  --fg:        #10203A;
+  --fg-dim:    #4A5568;
+  --gold-text: #6B5214;
+  --gold:      #8A6D1F;
+  --line:      rgba(11, 61, 46, .20);
+  --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
+  --glow-gold: rgba(212, 175, 55, .10);
+  --glow-green: rgba(20, 87, 67, .10);
+  --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+}

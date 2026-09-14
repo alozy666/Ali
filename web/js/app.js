@@ -1,79 +1,164 @@
-/* قشرة التطبيق — المرحلة M3: تهيئة المحرّك وعرض حالة البنك. الواجهة الكاملة في M4 */
+/* التشغيل وربط الأحداث — وَكُن مِنَ العارِفِينَ */
 (function () {
-  var $ = function (sel) { return document.querySelector(sel); };
+  var D = WKM.Dom, I = WKM.Icons, cfg = null;
 
-  function stationsPath(config) {
-    return config.stations.map(function (s, i) {
-      var cls = i === 0 ? 'node first' : (i === config.stations.length - 1 ? 'node last' : 'node');
-      return '<span class="' + cls + '">' + s.name + '</span>' +
-             (i < config.stations.length - 1 ? '<span class="sep">◂</span>' : '');
-    }).join('');
-  }
-
-  function selfCheck(data) {
-    var items = [];
-    function t(label, cond) { items.push({ label: label, ok: !!cond }); }
-    try {
-      var total = WKM.Bank.load(data);
-      t('تحميل بنك الأسئلة (' + total + ' عنصراً)', total > 200);
-      WKM.State.init(data.config, ['فريق تجريبي أ', 'فريق تجريبي ب'], 'journey', 1);
-      t('تهيئة الحالة والفرق والكروت', WKM.State.teams().length === 2);
-      var q = WKM.Bank.pick({ game: 'journey', station: 'mecca', difficulty: 'easy' }, WKM.RNG.create(1));
-      t('سحب سؤال من محطة مكة', !!q);
-      t('مطابقة الإجابات العربية رغم اختلاف الإملاء',
-        WKM.Arabic.isCorrect('ابو الفضل العباس', 'أبو الفضل العباس (ع)', []));
-      t('احتساب النقاط من الإعدادات', WKM.Score.forQuestion('hard') === data.config.points.difficulty.hard);
-      t('كروت المساعدة تعمل مرة واحدة',
-        WKM.Cards.use(WKM.State.teams()[0], 'journey', 'swap').ok &&
-        !WKM.Cards.use(WKM.State.teams()[0], 'journey', 'swap').ok);
-      t('سجلّ منع التكرار' + (WKM.Dedupe.storageAvailable() ? '' : ' (بالذاكرة — التخزين المحلي معطّل)'), true);
-    } catch (e) {
-      items.push({ label: 'خطأ: ' + e.message, ok: false });
-    }
-    return items;
-  }
-
-  function render(data) {
-    var checks = selfCheck(data);   // يُحمّل البنك أولاً ثم تُقرأ الإحصاءات
-    var s = WKM.Bank.stats();
-    $('#app').innerHTML =
+  /* ── الشاشة الرئيسية ── */
+  function renderWelcome() {
+    D.$('#sc-welcome').innerHTML =
       '<div class="wrap">' +
-        '<div class="hero">' +
-          '<h1>وَكُن مِنَ العارِفِينَ</h1>' +
-          '<p class="lead">طريقٌ من نور يمتدّ من الكعبة المشرفة في مكة إلى القباب الذهبية في سامراء، ' +
-          'يحفّه كتابٌ مضمّخ بالأنوار وإسطرلابٌ ذهبي… سبع محطات، وأربع ألعاب، وبنك معرفة موثّق بمصادره.</p>' +
-          '<div class="path">' + stationsPath(data.config) + '</div>' +
+        '<div class="hero" id="hero">' +
+          '<canvas id="hero-canvas"></canvas>' +
+          '<div class="fallback"></div>' +
+          '<div class="veil"></div>' +
+          '<div class="title"><h1>وَكُن مِنَ العارِفِينَ</h1>' +
+            '<div class="sub">لعبة مسابقات ومعارف إسلامية</div></div>' +
         '</div>' +
-        '<div class="stats">' +
-          '<div class="stat"><b>' + s.total + '</b><span>عنصراً في البنك</span></div>' +
-          '<div class="stat"><b>' + (s.games.journey || 0) + '</b><span>رحلة السفر</span></div>' +
-          '<div class="stat"><b>' + (s.games.qa || 0) + '</b><span>اسأل وجاوب</span></div>' +
-          '<div class="stat"><b>' + (s.games.hints || 0) + '</b><span>لَمِّح إليّ</span></div>' +
-          '<div class="stat"><b>' + (s.games.bidding || 0) + '</b><span>مَن يزيّد؟</span></div>' +
+        '<p class="lead">طريقٌ من نور يمتدّ من الكعبة المشرفة في مكة إلى القباب الذهبية في سامراء المقدسة… ' +
+          'سبع محطات، وأربع ألعاب، وبنك معرفة موثّق بمصادره.</p>' +
+        '<div class="btn-row">' +
+          '<button class="btn btn-primary btn-lg" id="start-game">' + I.get('play') + ' ابدأ الجلسة</button>' +
         '</div>' +
         '<div class="grid">' +
-          '<div class="card"><h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' +
-            data.config.timers.bidding_count + ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس.</p></div>' +
-          '<div class="card"><h3>رحلة السفر</h3><p>7 محطات، 3 أسئلة لكل فريق في كل محطة، ' +
-            data.config.timers.question + ' ثانية للسؤال، و3 كروت مساعدة.</p></div>' +
-          '<div class="card"><h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، والأسرع في الاستنتاج الصحيح يحصد النقاط.</p></div>' +
-          '<div class="card"><h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
-            data.config.timers.question + ' ثانية، و3 كروت: خيارات، ومساعدة، وحذف إجابتين.</p></div>' +
+          '<div class="card">' + I.get('dice') + '<h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' +
+            cfg.timers.bidding_count + ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس.</p></div>' +
+          '<div class="card">' + I.get('map') + '<h3>رحلة السفر</h3><p>7 محطات، 3 أسئلة لكل فريق في كل محطة، ' +
+            cfg.timers.question + ' ثانية للسؤال، و3 كروت مساعدة.</p></div>' +
+          '<div class="card">' + I.get('bulb') + '<h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، ' +
+            'والأسرع في الاستنتاج الصحيح يحصد النقاط.</p></div>' +
+          '<div class="card">' + I.get('question') + '<h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
+            'وكروت: خيارات، ومساعدة، وحذف إجابتين.</p></div>' +
         '</div>' +
-        '<div class="check"><strong>فحص المحرّك الذاتي</strong><ul>' +
-          checks.map(function (c) { return '<li class="' + (c.ok ? 'ok' : 'no') + '">' + c.label + '</li>'; }).join('') +
-        '</ul></div>' +
-        '<div class="note">هذه المرحلة <strong>M3</strong>: المحرّك وبنك الأسئلة وأداة البناء. ' +
-          'شاشات اللعب الكاملة (تسجيل الفرق، والمؤقّت، والكروت، ولوحة النقاط) تأتي في المرحلتين <strong>M4</strong> و<strong>M5</strong>.</div>' +
+        '<p class="section-note" style="margin-top:var(--sp-6)">بنك الأسئلة: ' +
+          '<strong>' + WKM.Bank.stats().total + '</strong> عنصراً، كلٌّ منها موثّق بمصدره.</p>' +
       '</div>';
+    mountHero();
   }
 
-  function fail(msg) {
-    $('#app').innerHTML = '<div class="wrap"><div class="note">تعذّر تحميل البيانات: ' + msg +
-      '<br>في وضع التطوير شغّل خادماً محلياً، أو استخدم الملف المدموج من مجلد dist.</div></div>';
+  function mountHero() {
+    var canvas = D.$('#hero-canvas'), hero = D.$('#hero');
+    if (!canvas) return;
+    var ok = WKM.Scene3D.mount(canvas);
+    if (!ok) hero.classList.add('no3d');
   }
 
+  /* ── كرت [خليها لغيري] مع أكثر من فريقين: اختيار الهدف ── */
+  function askPassTarget() {
+    var r = WKM.Journey.view();
+    var others = WKM.State.teams().filter(function (t) { return t.id !== r.answeringTeamId; });
+    if (others.length === 1) return applyCard('pass', others[0].id);
+    D.$('#cards-bar').innerHTML = '<div class="label">إلى أي فريق تُحوّل السؤال؟</div>' +
+      others.map(function (t) {
+        return '<button class="helpcard pass-to" data-team="' + t.id + '">' + I.get('pass') + ' ' + D.esc(t.name) + '</button>';
+      }).join('') + '<button class="helpcard" id="cancel-pass">إلغاء</button>';
+  }
+
+  function applyCard(card, target) {
+    var res = WKM.Journey.useCard(card, target);
+    if (!res.ok) { flash(res.reason || 'تعذّر استخدام الكرت'); return; }
+    WKM.Screens.timer().stop();
+    WKM.Screens.step({ type: 'question', round: res.round });
+  }
+
+  function flash(msg) {
+    var bar = D.$('#cards-bar');
+    if (!bar) return;
+    var n = document.createElement('div');
+    n.className = 'label';
+    n.style.color = 'var(--color-danger)';
+    n.textContent = msg;
+    bar.appendChild(n);
+    setTimeout(function () { if (n.parentNode) n.parentNode.removeChild(n); }, 2600);
+  }
+
+  /* ── السمة ── */
+  function currentTheme() {
+    try { return localStorage.getItem('wkm.theme') || ''; } catch (e) { return ''; }
+  }
+  function applyTheme(t) {
+    if (t) document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+    try { localStorage.setItem('wkm.theme', t); } catch (e) {}
+  }
+  function toggleTheme() {
+    var cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'light' ? 'dark' : 'light');
+  }
+
+  /* ── ربط الأحداث ── */
+  function wire() {
+    var app = D.$('#app');
+
+    D.on(document, '#theme-toggle', 'click', toggleTheme);
+    D.on(app, '#start-game', 'click', function () { WKM.Screens.renderTeams(); D.show('sc-teams'); });
+
+    D.on(app, '#add-team', 'click', function () {
+      var names = WKM.Screens.teamNames();
+      if (names.length >= 6) return;
+      names.push('فريق ' + (names.length + 1));
+      WKM.Screens.paintTeamRows(names);
+    });
+    D.on(app, '.del-team', 'click', function (e, btn) {
+      var rows = D.$$('.team-row'), idx = rows.indexOf(btn.closest('.team-row'));
+      var names = WKM.Screens.teamNames();
+      names.splice(idx, 1);
+      WKM.Screens.paintTeamRows(names);
+    });
+    D.on(app, '#to-modes', 'click', function () {
+      var names = WKM.Screens.teamNames();
+      if (names.length < 2) { alert('سجّل فريقين على الأقل'); return; }
+      WKM.State.init(cfg, names, 'journey', Date.now() >>> 0);
+      WKM.Screens.renderModes();
+      D.show('sc-modes');
+    });
+
+    D.on(app, '.mode', 'click', function (e, btn) {
+      if (btn.disabled || btn.dataset.mode !== 'journey') return;
+      WKM.Screens.startJourney();
+    });
+
+    D.on(app, '.opt', 'click', function (e, btn) {
+      if (btn.disabled || btn.classList.contains('gone')) return;
+      WKM.Screens.onAnswer(+btn.dataset.i);
+    });
+    D.on(app, '.verdict-btn', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      WKM.Screens.onAnswer(btn.dataset.ok === '1');
+    });
+    D.on(app, '#next-q', 'click', function () { WKM.Screens.step(WKM.Journey.next()); });
+    D.on(app, '#next-station', 'click', function () { WKM.Screens.step(WKM.Journey.next()); });
+    D.on(app, '#to-results', 'click', function () { WKM.Screens.renderResults(); });
+    D.on(app, '#play-again', 'click', function () {
+      WKM.Dedupe.reset(); WKM.Journey.reset();
+      WKM.Screens.renderTeams(WKM.State.teams().map(function (t) { return t.name; }));
+      D.show('sc-teams');
+    });
+    D.on(app, '#go-home', 'click', function () { D.show('sc-welcome'); });
+
+    D.on(app, '.helpcard[data-card]', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      var card = btn.dataset.card;
+      if (card === 'pass') askPassTarget(); else applyCard(card);
+    });
+    D.on(app, '.pass-to', 'click', function (e, btn) { applyCard('pass', btn.dataset.team); });
+    D.on(app, '#cancel-pass', 'click', function () {
+      WKM.Screens.step({ type: 'question', round: WKM.Journey.view() });
+    });
+  }
+
+  /* ── الإقلاع ── */
   document.addEventListener('DOMContentLoaded', function () {
-    WKM.Data.load().then(render).catch(function (e) { fail(e.message); });
+    applyTheme(currentTheme());
+    WKM.Data.load().then(function (data) {
+      cfg = data.config;
+      WKM.Bank.load(data);
+      WKM.Score.init(cfg); WKM.Cards.init(cfg);
+      WKM.Screens.init(cfg);
+      renderWelcome();
+      wire();
+      D.show('sc-welcome');
+    }).catch(function (err) {
+      D.$('#app').innerHTML = '<div class="wrap"><div class="card"><h3>تعذّر تحميل البيانات</h3><p>' +
+        D.esc(err.message) + '</p></div></div>';
+    });
   });
 })();

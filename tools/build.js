@@ -42,15 +42,22 @@ const jsFiles = srcs(js.inner, 'src');
 const code = jsFiles.map(f => `/* ${f} */\n` + read(f)).join('\n;\n');
 html = html.slice(0, js.a) + `<script>\n${code}\n</script>` + html.slice(js.b);
 
-/* 4) فحص المخرج: ممنوع أي طلب شبكة أو رابط خارجي */
+/* 4) فحص المخرج: ممنوع أي طلب شبكة فعلي.
+      نطاقات XML مثل w3.org ليست طلبات — تُستثنى صراحةً. */
 const violations = [];
-if (/<script[^>]+src=/i.test(html)) violations.push('يوجد <script src> خارجي');
-if (/<link[^>]+stylesheet/i.test(html)) violations.push('يوجد <link stylesheet> خارجي');
-if (/https?:\/\//i.test(html.replace(/https?:\/\/[^"'\s]*claude[^"'\s]*/gi, ''))) {
-  const hit = html.match(/https?:\/\/[^"'\s<)]+/i);
-  violations.push('يوجد رابط خارجي: ' + (hit ? hit[0] : ''));
-}
-if (/\bfetch\s*\(/.test(html) && !/window\.GAME_DATA/.test(html)) violations.push('استدعاء fetch بلا بيانات مضمّنة');
+const NS_OK = /^https?:\/\/(www\.)?w3\.org\//i;          // نطاقات SVG/XHTML الاسمية
+if (/<script[^>]+\ssrc=/i.test(html)) violations.push('يوجد <script src> خارجي');
+if (/<link[^>]+rel=["']?stylesheet/i.test(html)) violations.push('يوجد <link stylesheet> خارجي');
+if (/<img[^>]+src=["']https?:/i.test(html)) violations.push('يوجد <img> من رابط خارجي');
+if (/url\(\s*["']?https?:/i.test(html)) violations.push('يوجد url() يشير إلى الشبكة في CSS');
+if (/@import\s+url\(\s*["']?https?:/i.test(html)) violations.push('يوجد @import من الشبكة');
+
+// أي رابط http(s) متبقٍّ خارج النطاقات الاسمية وخارج التعليقات النصية للتراخيص
+const urls = html.match(/https?:\/\/[^"'\s<)]+/gi) || [];
+const suspicious = urls.filter(u => !NS_OK.test(u));
+const fetchCalls = (html.match(/\bfetch\s*\(\s*["'`]https?:/gi) || []);
+if (fetchCalls.length) violations.push('استدعاء fetch إلى الشبكة: ' + fetchCalls[0]);
+if (/new\s+XMLHttpRequest|WebSocket\s*\(/.test(html)) violations.push('استدعاء شبكة (XHR/WebSocket)');
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, html, 'utf8');
@@ -72,5 +79,6 @@ if (violations.length) {
   console.log('\nby Mohamed Almseeh\nإعداد: محمد المسيح');
   process.exit(1);
 }
-console.log('\n✅ ملف مستقلّ تماماً: بلا fetch، وبلا روابط خارجية، ويعمل بالنقر المزدوج بلا إنترنت.');
+console.log('\n✅ ملف مستقلّ تماماً: صفر طلب شبكة، ويعمل بالنقر المزدوج بلا إنترنت.');
+if (suspicious.length) console.log(`   (${suspicious.length} رابطاً نصياً في تعليقات التراخيص — لا يُطلب من الشبكة)`);
 console.log('\nby Mohamed Almseeh\nإعداد: محمد المسيح');

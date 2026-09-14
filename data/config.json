@@ -3,7 +3,10 @@
   "title": "وَكُن مِنَ العارِفِينَ",
   "subtitle": "لعبة مسابقات ومعارف إسلامية",
   "author": "محمد المسيح",
-  "signature": { "en": "by Mohamed Almseeh", "ar": "إعداد: محمد المسيح" },
+  "signature": {
+    "en": "by Mohamed Almseeh",
+    "ar": "إعداد: محمد المسيح"
+  },
   "timers": {
     "bidding_count": 30,
     "question": 60,
@@ -12,29 +15,83 @@
     "warn_at": 5
   },
   "points": {
-    "difficulty": { "easy": 10, "medium": 20, "hard": 30 },
-    "bidding": { "base": 25, "per_extra_item": 2 },
-    "hint": { "base": 20, "extra_hint_penalty": 5 },
+    "difficulty": {
+      "easy": 10,
+      "medium": 20,
+      "hard": 30
+    },
+    "bidding": {
+      "base": 25,
+      "per_extra_item": 2
+    },
+    "hint": {
+      "base": 20,
+      "extra_hint_penalty": 5
+    },
     "station_bonus": 15
   },
   "cards": {
-    "journey": ["pass", "swap", "options"],
-    "qa": ["options", "ask_help", "fifty"],
+    "journey": [
+      "pass",
+      "swap",
+      "options"
+    ],
+    "qa": [
+      "options",
+      "ask_help",
+      "fifty"
+    ],
     "uses_per_card": 1
   },
   "rules": {
     "pass_card_chooses_target": true,
     "tiebreak": "sudden_death_hard",
     "questions_per_station_per_team": 3,
-    "min_teams": 2
+    "min_teams": 2,
+    "open_hard_questions": true
   },
   "stations": [
-    { "id": "mecca",      "name": "مكة المكرمة",     "order": 1, "theme": "السيرة النبوية المبكرة والمبعث والدعوة" },
-    { "id": "medina",     "name": "المدينة المنورة",  "order": 2, "theme": "النبي الأكرم والزهراء والحسن المجتبى وأئمة البقيع (ع)" },
-    { "id": "najaf",      "name": "النجف الأشرف",     "order": 3, "theme": "سيرة وعلم أمير المؤمنين الإمام علي (ع)" },
-    { "id": "karbala",    "name": "كربلاء المقدسة",   "order": 4, "theme": "النهضة الحسينية والإمام الحسين وأصحابه (ع)" },
-    { "id": "kadhimiya",  "name": "الكاظمية المقدسة", "order": 5, "theme": "الإمام موسى الكاظم والإمام محمد الجواد (ع)" },
-    { "id": "mashhad",    "name": "مشهد المقدسة",     "order": 6, "theme": "الإمام علي بن موسى الرضا (ع)" },
-    { "id": "samarra",    "name": "سامراء المقدسة",   "order": 7, "theme": "الإمام علي الهادي والإمام الحسن العسكري (ع)" }
+    {
+      "id": "mecca",
+      "name": "مكة المكرمة",
+      "order": 1,
+      "theme": "السيرة النبوية المبكرة والمبعث والدعوة"
+    },
+    {
+      "id": "medina",
+      "name": "المدينة المنورة",
+      "order": 2,
+      "theme": "النبي الأكرم والزهراء والحسن المجتبى وأئمة البقيع (ع)"
+    },
+    {
+      "id": "najaf",
+      "name": "النجف الأشرف",
+      "order": 3,
+      "theme": "سيرة وعلم أمير المؤمنين الإمام علي (ع)"
+    },
+    {
+      "id": "karbala",
+      "name": "كربلاء المقدسة",
+      "order": 4,
+      "theme": "النهضة الحسينية والإمام الحسين وأصحابه (ع)"
+    },
+    {
+      "id": "kadhimiya",
+      "name": "الكاظمية المقدسة",
+      "order": 5,
+      "theme": "الإمام موسى الكاظم والإمام محمد الجواد (ع)"
+    },
+    {
+      "id": "mashhad",
+      "name": "مشهد المقدسة",
+      "order": 6,
+      "theme": "الإمام علي بن موسى الرضا (ع)"
+    },
+    {
+      "id": "samarra",
+      "name": "سامراء المقدسة",
+      "order": 7,
+      "theme": "الإمام علي الهادي والإمام الحسن العسكري (ع)"
+    }
   ]
 }

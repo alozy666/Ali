@@ -1,60 +1,101 @@
-/* الهوية البصرية — وَكُن مِنَ العارِفِينَ */
+/* ═══ نظام الرموز التصميمية — وَكُن مِنَ العارِفِينَ ═══
+   ثلاث طبقات: أولية (خام) ← دلالية (معنى) ← مكوّنات (استعمال) */
+
 :root {
-  --emerald-deep: #0B3D2E;
-  --emerald: #145743;
-  --navy-deep:  #0A1A3C;
-  --navy:       #12285C;
-  --gold:       #D4AF37;
-  --gold-soft:  #E8C96A;
-  --ivory:      #F5EFE0;
+  /* ── الطبقة 1: رموز أولية ── */
+  --gold-300:#F0D98A; --gold-400:#E8C96A; --gold-500:#D4AF37; --gold-600:#A9861F; --gold-700:#7A5F16; --gold-800:#4E3C0C;
+  --emerald-700:#145743; --emerald-800:#0F4A38; --emerald-900:#0B3D2E;
+  --navy-700:#12285C; --navy-800:#0D1F45; --navy-900:#0A1A3C; --navy-950:#07132C;
+  --ivory-50:#FBF7EC; --ivory-100:#F5EFE0; --ivory-200:#E8DFC9;
+  --slate-600:#4A5568; --slate-900:#10203A;
+  --green-500:#2FA37A; --red-500:#D9534F; --amber-500:#E0A22B;
 
-  /* اللوحة الافتراضية: ليلية (هوية اللعبة الأساسية) */
-  --bg:        var(--navy-deep);
-  --bg-card:   rgba(11, 61, 46, .55);
-  --fg:        var(--ivory);
-  --fg-dim:    rgba(245, 239, 224, .74);
-  --gold-text: var(--gold-soft);          /* لون العناوين الذهبية */
-  --line:      rgba(212, 175, 55, .28);
-  --grad-a: #F0D98A; --grad-b: #D4AF37; --grad-c: #9A7B1E;
-  --glow-gold: rgba(212, 175, 55, .16);
-  --glow-green: rgba(20, 87, 67, .45);
+  /* ── الطبقة 2: رموز دلالية (الوضع الليلي = الهوية الأساسية) ── */
+  --color-bg:            var(--navy-900);
+  --color-bg-elevated:   var(--navy-800);
+  --color-surface:       rgba(11,61,46,.55);
+  --color-on-surface:    var(--ivory-100);
+  --color-muted:         rgba(11,61,46,.34);
+  --color-on-muted:      rgba(245,239,224,.74);
+  --color-primary:       var(--gold-500);
+  --color-on-primary:    var(--navy-950);
+  --color-secondary:     var(--emerald-700);
+  --color-on-secondary:  var(--ivory-100);
+  --color-heading:       var(--gold-400);
+  --color-border:        rgba(212,175,55,.28);
+  --color-border-strong: rgba(212,175,55,.55);
+  --color-ring:          var(--gold-400);
+  --color-success:       var(--green-500);
+  --color-danger:        var(--red-500);
+  --color-warning:       var(--amber-500);
+  --grad-a: var(--gold-300); --grad-b: var(--gold-500); --grad-c:#9A7B1E;
+  --glow-gold: rgba(212,175,55,.16);
+  --glow-green: rgba(20,87,67,.45);
 
-  --radius: 16px;
-  --shadow: 0 18px 50px rgba(0, 0, 0, .45);
-  --font: "Noto Naskh Arabic", "Amiri", "Scheherazade New", "Traditional Arabic", system-ui, Tahoma, sans-serif;
+  /* ── الطبقة 3: رموز المكوّنات ── */
+  --card-bg: var(--color-surface);
+  --card-border: var(--color-border);
+  --btn-radius: 14px;
+  --timer-track: rgba(245,239,224,.16);
+  --timer-fill:  var(--gold-500);
+  --timer-warn:  var(--red-500);
+  --option-bg: rgba(10,26,60,.55);
+  --option-bg-hover: rgba(20,87,67,.62);
 
-  /* أحجام كبيرة عمداً: الجميع يقرأ من شاشة الحَكَم عن بُعد */
-  --fs-title: clamp(2.1rem, 6vw, 4rem);
-  --fs-lead:  clamp(1.05rem, 2.4vw, 1.5rem);
-  --fs-body:  clamp(1rem, 2vw, 1.2rem);
+  /* ── مقاييس ── */
+  --sp-1:.25rem; --sp-2:.5rem; --sp-3:.75rem; --sp-4:1rem; --sp-5:1.5rem; --sp-6:2rem; --sp-7:3rem;
+  --radius-sm:10px; --radius:16px; --radius-lg:22px; --radius-pill:999px;
+  --shadow-1: 0 4px 14px rgba(0,0,0,.28);
+  --shadow-2: 0 18px 50px rgba(0,0,0,.45);
+  --shadow-gold: 0 0 28px rgba(212,175,55,.30);
+  --dur-fast:160ms; --dur:280ms; --dur-slow:400ms;
+  --ease: cubic-bezier(.22,.68,.36,1);
+
+  /* ── الطباعة: خطوط عربية مضمّنة، والبدائل نظامية ── */
+  --font-head: 'Noto Naskh Arabic','Amiri','Scheherazade New','Traditional Arabic',serif;
+  --font-body: 'Noto Sans Arabic','Segoe UI',system-ui,Tahoma,sans-serif;
+  --fs-display: clamp(2.3rem, 7vw, 4.6rem);
+  --fs-title:   clamp(1.6rem, 4vw, 2.6rem);
+  --fs-lead:    clamp(1.05rem, 2.3vw, 1.45rem);
+  --fs-body:    clamp(1rem, 1.9vw, 1.2rem);
+  --fs-q:       clamp(1.25rem, 3vw, 2rem);   /* السؤال: يُقرأ من مسافة */
+  --fs-small:   clamp(.85rem, 1.5vw, .98rem);
 }
 
-/* الوضع النهاري: ذهب داكن على عاجي ليبقى التباين عالياً */
+/* ── الوضع النهاري: ذهب داكن على عاجي، تباين عالٍ ── */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --bg:        #FBF7EC;
-    --bg-card:   #FFFFFF;
-    --fg:        #10203A;
-    --fg-dim:    #4A5568;
-    --gold-text: #6B5214;
-    --gold:      #8A6D1F;
-    --line:      rgba(11, 61, 46, .20);
-    --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
-    --glow-gold: rgba(212, 175, 55, .10);
-    --glow-green: rgba(20, 87, 67, .10);
-    --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+    --color-bg: var(--ivory-50);
+    --color-bg-elevated:#FFFFFF;
+    --color-surface:#FFFFFF;
+    --color-on-surface: var(--slate-900);
+    --color-muted:#F1EADA;
+    --color-on-muted: var(--slate-600);
+    --color-primary: var(--gold-600);
+    --color-on-primary:#FFFFFF;
+    --color-secondary: var(--emerald-900);
+    --color-heading: var(--gold-700);
+    --color-border: rgba(11,61,46,.20);
+    --color-border-strong: rgba(122,95,22,.55);
+    --color-ring: var(--gold-600);
+    --grad-a: var(--gold-600); --grad-b: var(--gold-700); --grad-c: var(--gold-800);
+    --glow-gold: rgba(212,175,55,.10);
+    --glow-green: rgba(20,87,67,.10);
+    --shadow-2: 0 12px 34px rgba(10,26,60,.12);
+    --shadow-gold: 0 0 22px rgba(169,134,31,.22);
+    --timer-track: rgba(16,32,58,.14);
+    --option-bg:#FFFFFF;
+    --option-bg-hover:#F3EFE2;
   }
 }
 :root[data-theme="light"] {
-  --bg:        #FBF7EC;
-  --bg-card:   #FFFFFF;
-  --fg:        #10203A;
-  --fg-dim:    #4A5568;
-  --gold-text: #6B5214;
-  --gold:      #8A6D1F;
-  --line:      rgba(11, 61, 46, .20);
-  --grad-a: #A9861F; --grad-b: #7A5F16; --grad-c: #4E3C0C;
-  --glow-gold: rgba(212, 175, 55, .10);
-  --glow-green: rgba(20, 87, 67, .10);
-  --shadow: 0 12px 34px rgba(10, 26, 60, .10);
+  --color-bg: var(--ivory-50); --color-bg-elevated:#FFFFFF; --color-surface:#FFFFFF;
+  --color-on-surface: var(--slate-900); --color-muted:#F1EADA; --color-on-muted: var(--slate-600);
+  --color-primary: var(--gold-600); --color-on-primary:#FFFFFF; --color-secondary: var(--emerald-900);
+  --color-heading: var(--gold-700); --color-border: rgba(11,61,46,.20);
+  --color-border-strong: rgba(122,95,22,.55); --color-ring: var(--gold-600);
+  --grad-a: var(--gold-600); --grad-b: var(--gold-700); --grad-c: var(--gold-800);
+  --glow-gold: rgba(212,175,55,.10); --glow-green: rgba(20,87,67,.10);
+  --shadow-2: 0 12px 34px rgba(10,26,60,.12); --shadow-gold: 0 0 22px rgba(169,134,31,.22);
+  --timer-track: rgba(16,32,58,.14); --option-bg:#FFFFFF; --option-bg-hover:#F3EFE2;
 }

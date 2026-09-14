@@ -92,6 +92,16 @@ assert(matched.size === 5, `مطابقة 5 عناصر رغم اختلاف الإ
 assert(W.Score.forBidding(5, 5) === 25, 'مزايدة 5 وتعداد 5 ⟵ 25 نقطة');
 assert(W.Score.forBidding(5, 3) === 0, 'الفشل في التعداد ⟵ 0 (والنقاط للمنافس)');
 
+/* اختبار انحدار: ربط فهرس صح/خطأ في واجهة الويب (0=صحيح · 1=خطأ) */
+function tfIndexCorrect(pickIndex, answerBool) { return (pickIndex === 0) === (answerBool === true); }
+assert(tfIndexCorrect(0, true)  === true,  'صح/خطأ: اختيار «صحيح» لسؤال إجابته صحيح ⟵ صحيح');
+assert(tfIndexCorrect(1, true)  === false, 'صح/خطأ: اختيار «خطأ» لسؤال إجابته صحيح ⟵ خطأ');
+assert(tfIndexCorrect(1, false) === true,  'صح/خطأ: اختيار «خطأ» لسؤال إجابته خطأ ⟵ صحيح');
+assert(tfIndexCorrect(0, false) === false, 'صح/خطأ: اختيار «صحيح» لسؤال إجابته خطأ ⟵ خطأ');
+const tfQs = W.Bank.all().filter(q => q.type === 'tf');
+assert(tfQs.length > 0 && tfQs.every(q => typeof q.answer === 'boolean'),
+       `كل أسئلة صح/خطأ (${tfQs.length}) إجاباتها منطقية`);
+
 /* اختبار التعادل */
 const tieCheck = A.score === B.score;
 assert(W.State.isTie() === tieCheck, 'كشف التعادل يطابق الحالة الفعلية');

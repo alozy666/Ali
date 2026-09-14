@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/polish.css">
 <!-- /BUILD:CSS -->
 </head>
 <body>
@@ -34,6 +35,12 @@
   </button>
 </div>
 
+<div id="splash"><div class="inner">
+  <div id="splash-emblem"></div>
+  <div class="t">وَكُن مِنَ العارِفِينَ</div>
+  <div class="load"><span></span></div>
+</div></div>
+
 <main id="app">
   <section class="screen active" id="sc-welcome"><div class="wrap"><p>جارٍ التحميل…</p></div></section>
   <section class="screen" id="sc-teams"></section>
@@ -49,6 +56,7 @@
 <!-- /BUILD:DATA -->
 <!-- BUILD:JS -->
 <script src="vendor/three.min.js"></script>
+<script src="vendor/anime.min.js"></script>
 <script src="js/engine/arabic.js"></script>
 <script src="js/engine/rng.js"></script>
 <script src="js/engine/dedupe.js"></script>
@@ -59,6 +67,7 @@
 <script src="js/engine/state.js"></script>
 <script src="js/ui/icons.js"></script>
 <script src="js/ui/sound.js"></script>
+<script src="js/ui/fx.js"></script>
 <script src="js/ui/share.js"></script>
 <script src="js/ui/dom.js"></script>
 <script src="js/ui/scene3d.js"></script>

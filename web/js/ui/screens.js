@@ -21,13 +21,18 @@ WKM.Screens = (function () {
 
   /* ───────── مكوّنات مشتركة ───────── */
 
-  function stationsStrip(currentIdx, showAll) {
-    return cfg.stations.map(function (s, i) {
-      var cls = i < currentIdx ? 'st done' : (i === currentIdx ? 'st now' : 'st');
-      var name = (!showAll && Math.abs(i - currentIdx) > 2) ? '·' : D.esc(s.name);
-      return '<span class="' + cls + '">' + name + '</span>' +
-             (i < cfg.stations.length - 1 ? '<span class="st-sep">◂</span>' : '');
-    }).join('');
+  /* خريطة الرحلة: مسار متصل بعُقَد، يمتلئ تدريجياً كلما تقدّم اللاعبون */
+  function stationsStrip(currentIdx) {
+    var total = cfg.stations.length;
+    var pct = total > 1 ? (currentIdx / (total - 1)) * 100 : 0;
+    return '<div class="route" style="--nodes:' + total + '">' +
+      '<div class="route-track"><span class="route-fill" style="width:' + pct + '%"></span></div>' +
+      '<div class="route-nodes">' + cfg.stations.map(function (st, i) {
+        var cls = i < currentIdx ? 'route-node done' : (i === currentIdx ? 'route-node now' : 'route-node');
+        var short = st.name.replace(/\s+(المكرمة|المنورة|الأشرف|المقدسة)$/, '');
+        return '<div class="' + cls + '"><span class="route-dot">' + (i + 1) + '</span>' +
+               '<span class="route-label">' + D.esc(short) + '</span></div>';
+      }).join('') + '</div></div>';
   }
 
   function timerMarkup() {
@@ -63,9 +68,9 @@ WKM.Screens = (function () {
     names = names || ['فريق الغدير', 'فريق الكوثر'];
     E.teams.innerHTML =
       '<div class="wrap">' +
-        '<h2 class="section-title">' + I.get('users') + ' مَن يتنافس الليلة؟</h2>' +
-        '<p class="section-note">سجّل أسماء الفرق — فريقان على الأقل.</p>' +
-        '<div class="team-list" id="team-list"></div>' +
+        '<h2 class="section-title fx-in">' + I.get('users') + ' مَن يتنافس الليلة؟</h2>' +
+        '<p class="section-note fx-in">سجّل أسماء الفرق — فريقان على الأقل.</p>' +
+        '<div class="team-list fx-in" id="team-list"></div>' +
         '<div class="btn-row">' +
           '<button class="btn" id="add-team">' + I.get('plus') + ' إضافة فريق</button>' +
           '<button class="btn btn-primary btn-lg" id="to-modes">' + I.get('play') + ' متابعة</button>' +
@@ -91,21 +96,21 @@ WKM.Screens = (function () {
   function renderModes() {
     E.modes.innerHTML =
       '<div class="wrap">' +
-        '<h2 class="section-title">' + I.get('map') + ' اختر نمط الجلسة</h2>' +
+        '<h2 class="section-title fx-in">' + I.get('map') + ' اختر نمط الجلسة</h2>' +
         '<p class="section-note">الفرق: ' + D.esc(WKM.State.teams().map(function (t) { return t.name; }).join(' · ')) + '</p>' +
         '<div class="modes">' +
-          '<button class="card mode" data-mode="journey">' + I.get('map') +
+          '<button class="card mode fx-in" data-mode="journey">' + I.get('map') +
             '<h3>رحلة السفر الكاملة</h3><p>سبع محطات من مكة المكرمة إلى سامراء المقدسة، ' +
             '3 أسئلة لكل فريق في كل محطة، و3 كروت مساعدة.</p></button>' +
-          '<button class="card mode" data-mode="mixed">' + I.get('star') +
+          '<button class="card mode fx-in" data-mode="mixed">' + I.get('star') +
             '<h3>النمط الشامل</h3><p>' + cfg.rounds.mixed + ' جولة متنوعة عشوائياً بين الألعاب الأربع.</p></button>' +
-          '<button class="card mode" data-mode="bidding">' + I.get('dice') +
+          '<button class="card mode fx-in" data-mode="bidding">' + I.get('dice') +
             '<h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' + cfg.timers.bidding_count +
             ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس. (' + cfg.rounds.bidding + ' جولات)</p></button>' +
-          '<button class="card mode" data-mode="hints">' + I.get('bulb') +
+          '<button class="card mode fx-in" data-mode="hints">' + I.get('bulb') +
             '<h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، والأسرع في الاستنتاج يفوز. (' +
             cfg.rounds.hints + ' جولات)</p></button>' +
-          '<button class="card mode" data-mode="qa">' + I.get('question') +
+          '<button class="card mode fx-in" data-mode="qa">' + I.get('question') +
             '<h3>اسأل وجاوب</h3><p>أسئلة مباشرة في العقائد والفقه والقرآن والتاريخ، ' +
             cfg.timers.question + ' ثانية، و3 كروت. (' + cfg.rounds.qa_per_team + ' أسئلة لكل فريق)</p></button>' +
         '</div>' +
@@ -124,8 +129,8 @@ WKM.Screens = (function () {
 
     E.play.innerHTML =
       '<div class="wrap">' +
-        '<div class="stations">' + stationsStrip(r.stationIndex) + '</div>' +
-        '<div class="card">' +
+        stationsStrip(r.stationIndex) +
+        '<div class="card fx-in">' +
           '<div class="hud">' +
             '<div><div class="who">' + I.get('flag') + ' ' + D.esc(team.name) + '</div>' +
               '<div class="meta">' + D.esc(r.station.name) + ' — المحطة ' + (r.stationIndex + 1) + ' من ' + cfg.stations.length + '</div></div>' +
@@ -133,13 +138,15 @@ WKM.Screens = (function () {
               '<span class="chip ' + r.difficulty + '">' + diffName + ' · ' + r.points + ' نقطة</span>' +
               timerMarkup() + '</div>' +
           '</div>' +
-          '<p class="question">' + D.esc(r.question.text) + '</p>' +
+          '<p class="question fx-in">' + D.esc(r.question.text) + '</p>' +
           '<div id="answers">' + answersMarkup(r) + '</div>' +
           '<div id="reveal"></div>' +
           '<div class="cards-bar" id="cards-bar">' + cardsBarMarkup(team, r) + '</div>' +
         '</div>' +
       '</div>';
     D.show('sc-play');
+    WKM.FX.enter('#sc-play .fx-in', { stagger: 70, scale: true });
+    WKM.FX.enter('#answers .opt, #answers .btn', { stagger: 55, delay: 180 });
     timer.start(cfg.timers.question);
   }
 
@@ -210,6 +217,12 @@ WKM.Screens = (function () {
       '</div>';
     D.$$('#cards-bar .helpcard').forEach(function (b) { b.disabled = true; });
     if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
+    var pcard = D.$('#sc-play .card');
+    if (res.correct) {
+      var hit = D.$('#answers .opt.correct') || pcard;
+      WKM.FX.glow(hit);
+      if (who) WKM.FX.floatPoints('+' + res.points, hit);
+    } else WKM.FX.shake(pcard);
   }
 
   /* ───────── لوحة النقاط بين المحطات ───────── */
@@ -222,8 +235,8 @@ WKM.Screens = (function () {
     var isEnd = info.type === 'end';
     E.board.innerHTML =
       '<div class="wrap">' +
-        '<div class="stations">' + stationsStrip(WKM.State.get().stationIndex, true) + '</div>' +
-        '<div class="card">' +
+        stationsStrip(WKM.State.get().stationIndex) +
+        '<div class="card fx-in">' +
           '<h3>' + I.get('flag') + ' ' + (isEnd ? 'انتهت الرحلة' : 'اكتملت المحطة') + '</h3>' +
           (bonusHtml ? '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0">' + bonusHtml + '</div>' : '') +
           scoresTable() +
@@ -236,7 +249,24 @@ WKM.Screens = (function () {
         '</div>' +
       '</div>';
     D.show('sc-board');
+    WKM.FX.enter('#sc-board .fx-in', { scale: true });
+    WKM.FX.enter('#sc-board .scores tbody tr', { stagger: 70, delay: 160 });
+    animateScores('#sc-board');
+    if (info.bonuses && info.bonuses.length) WKM.FX.confetti({ count: 70, duration: 1800 });
     if (WKM.Sound && !isEnd) WKM.Sound.station();
+  }
+
+  /* يعدّ أرقام النقاط تصاعدياً بدل ظهورها دفعة واحدة */
+  function animateScores(scope) {
+    /* عند تعطيل الحركة نترك الرقم كما هو — لا نصفّره ثم نعيده */
+    if (WKM.FX.reduced() || !window.anime) return;
+    D.$$((scope || '') + ' .pts, ' + (scope || '') + ' .pts2').forEach(function (el, i) {
+      var to = parseInt(el.textContent, 10);
+      if (isNaN(to)) return;
+      el.dataset.final = to;
+      el.textContent = '0';
+      setTimeout(function () { WKM.FX.countUp(el, 0, to, 1000); }, 220 + i * 90);
+    });
   }
 
   /* ───────── النتائج ───────── */
@@ -248,7 +278,7 @@ WKM.Screens = (function () {
       var best = WKM.State.bestStation(t.id);
       var un = WKM.State.unusedCards(t);
       var acc = WKM.State.accuracy(t);
-      return '<div class="card result-row' + (i === 0 && !tie ? ' champ' : '') + '">' +
+      return '<div class="card result-row fx-in' + (i === 0 && !tie ? ' champ' : '') + '">' +
         '<div class="rank">' + (i === 0 && !tie ? I.get('crown') : (i + 1)) + '</div>' +
         '<div class="who2"><div class="nm">' + D.esc(t.name) + '</div>' +
           '<div class="meta">' + t.stats.correct + ' صحيحة · ' + t.stats.wrong + ' خاطئة · ' +
@@ -261,13 +291,13 @@ WKM.Screens = (function () {
 
     E.results.innerHTML =
       '<div class="wrap">' +
-        '<div class="card winner">' + I.emblem(96, 'res') +
+        '<div class="card winner fx-in">' + I.emblem(96, 'res') +
           (tie ? '<div class="name">تعادل!</div><p class="section-note">القاعدة: سؤال «موت مفاجئ» من فئة صعب حتى الحسم.</p>'
                : '<div class="sub-t">الفائز</div><div class="name">' + D.esc(st[0].name) + '</div>' +
                  '<div class="pts">' + st[0].score + '</div>') +
         '</div>' +
         '<div class="results-list">' + cards + '</div>' +
-        '<div class="card" style="margin-top:var(--sp-4)">' +
+        '<div class="card fx-in" style="margin-top:var(--sp-4)">' +
           '<div class="btn-row" style="margin:0">' +
             '<button class="btn" id="copy-result">' + I.get('book') + ' نسخ النتيجة</button>' +
             '<button class="btn" id="image-result">' + I.get('star') + ' تنزيل صورة</button>' +
@@ -277,6 +307,13 @@ WKM.Screens = (function () {
         '</div>' +
       '</div>';
     D.show('sc-results');
+    WKM.FX.enter('#sc-results .fx-in', { stagger: 90, scale: true });
+    animateScores('#sc-results');
+    D.$$('#sc-results .bar span').forEach(function (b) {
+      var w = b.style.width; b.style.width = '0';
+      setTimeout(function () { b.style.transition = 'width 1.1s cubic-bezier(.22,.68,.36,1)'; b.style.width = w; }, 420);
+    });
+    if (!tie) WKM.FX.confetti({ count: 180, duration: 3200 });
     if (WKM.Sound) WKM.Sound.win();
   }
 
@@ -314,6 +351,7 @@ WKM.Screens = (function () {
     renderModes: renderModes, renderResults: renderResults, renderBoard: renderBoard,
     startJourney: startJourney, step: step, onAnswer: onAnswer,
     setPendingPass: function (v) { pendingPass = v; }, isPendingPass: function () { return pendingPass; },
-    timer: function () { return timer; }, scoresTable: scoresTable
+    timer: function () { return timer; }, scoresTable: scoresTable,
+    animateScores: animateScores, stationsStrip: stationsStrip
   };
 })();

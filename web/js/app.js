@@ -6,38 +6,39 @@
   function renderWelcome() {
     D.$('#sc-welcome').innerHTML =
       '<div class="wrap">' +
-        '<div class="hero" id="hero">' +
+        '<div class="hero fx-in" id="hero">' +
           '<canvas id="hero-canvas"></canvas>' +
           '<div class="fallback"></div>' +
           '<div class="veil"></div>' +
           '<div class="title"><h1>وَكُن مِنَ العارِفِينَ</h1>' +
             '<div class="sub">لعبة مسابقات ومعارف إسلامية</div></div>' +
         '</div>' +
-        '<p class="lead">طريقٌ من نور يمتدّ من الكعبة المشرفة في مكة إلى القباب الذهبية في سامراء المقدسة… ' +
+        '<p class="lead fx-in">طريقٌ من نور يمتدّ من الكعبة المشرفة في مكة إلى القباب الذهبية في سامراء المقدسة… ' +
           'سبع محطات، وأربع ألعاب، وبنك معرفة موثّق بمصادره.</p>' +
-        '<div class="btn-row">' +
+        '<div class="btn-row fx-in">' +
           '<button class="btn btn-primary btn-lg" id="start-game">' + I.get('play') + ' ابدأ الجلسة</button>' +
         '</div>' +
         '<div class="grid">' +
-          '<div class="card">' + I.get('dice') + '<h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' +
+          '<div class="card fx-in">' + I.get('dice') + '<h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' +
             cfg.timers.bidding_count + ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس.</p></div>' +
-          '<div class="card">' + I.get('map') + '<h3>رحلة السفر</h3><p>7 محطات، 3 أسئلة لكل فريق في كل محطة، ' +
+          '<div class="card fx-in">' + I.get('map') + '<h3>رحلة السفر</h3><p>7 محطات، 3 أسئلة لكل فريق في كل محطة، ' +
             cfg.timers.question + ' ثانية للسؤال، و3 كروت مساعدة.</p></div>' +
-          '<div class="card">' + I.get('bulb') + '<h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، ' +
+          '<div class="card fx-in">' + I.get('bulb') + '<h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، ' +
             'والأسرع في الاستنتاج الصحيح يحصد النقاط.</p></div>' +
-          '<div class="card">' + I.get('question') + '<h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
+          '<div class="card fx-in">' + I.get('question') + '<h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
             'وكروت: خيارات، ومساعدة، وحذف إجابتين.</p></div>' +
         '</div>' +
         toolsMarkup() +
       '</div>';
     mountHero();
+    WKM.FX.enter('#sc-welcome .fx-in', { stagger: 85, duration: 560, scale: true });
   }
 
   /* أدوات الحَكَم: حالة البنك وتصفيره وتصدير الجلسة واستيرادها */
   function toolsMarkup() {
     var st = WKM.Bank.stats();
     var used = st.total - st.remaining;
-    return '<div class="card" id="tools-card" style="margin-top:var(--sp-6)">' +
+    return '<div class="card fx-in" id="tools-card" style="margin-top:var(--sp-6)">' +
       '<h3>' + I.get('book') + ' بنك الأسئلة وأدوات الحَكَم</h3>' +
       '<p><strong style="color:var(--color-primary)">' + st.remaining + '</strong> عنصراً متاحاً من ' +
         st.total + '، كلٌّ منها موثّق بمصدره' + (used ? ' (استُهلك ' + used + ')' : '') + '.' +
@@ -71,6 +72,15 @@
     var m = D.$('#tools-msg');
     if (m) m.innerHTML = '<div class="label" style="color:var(--color-' + (danger ? 'danger' : 'success') + ')">' +
       D.esc(text) + '</div>';
+  }
+
+  function hideSplash() {
+    var sp = D.$('#splash');
+    if (!sp) return;
+    setTimeout(function () {
+      sp.classList.add('hidden');
+      setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 900);
+    }, WKM.FX.reduced() ? 0 : 620);
   }
 
   function mountHero() {
@@ -126,6 +136,12 @@
   /* ── ربط الأحداث ── */
   function wire() {
     var app = D.$('#app');
+
+    /* تموّج لمسي على كل الأزرار */
+    document.addEventListener('pointerdown', function (e) {
+      var b = e.target.closest('.btn, .helpcard, .opt, .icon-btn, .mode');
+      if (b && !b.disabled) WKM.FX.ripple(b, e);
+    });
 
     D.on(document, '#theme-toggle', 'click', toggleTheme);
     D.on(document, '#mute-toggle', 'click', function (e, btn) {
@@ -325,6 +341,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     applyTheme(currentTheme());
     var brand = D.$('#brand'); if (brand) brand.innerHTML = I.emblem(34, 'brand');
+    var sp = D.$('#splash-emblem'); if (sp) sp.innerHTML = I.emblem(96, 'splash');
     var mute = D.$('#mute-toggle');
     if (mute && WKM.Sound.isMuted()) { mute.classList.add('muted'); mute.setAttribute('aria-pressed', 'true'); }
     WKM.Data.load().then(function (data) {
@@ -336,6 +353,7 @@
       renderWelcome();
       wire();
       D.show('sc-welcome');
+      hideSplash();
     }).catch(function (err) {
       D.$('#app').innerHTML = '<div class="wrap"><div class="card"><h3>تعذّر تحميل البيانات</h3><p>' +
         D.esc(err.message) + '</p></div></div>';

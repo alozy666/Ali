@@ -27,8 +27,8 @@ button, input { font-family: inherit; font-size: inherit; color: inherit; }
 .hero canvas { display: block; width: 100%; height: clamp(230px, 40vw, 400px); }
 .hero .veil { position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(120% 65% at 50% 118%, rgba(7,19,44,.94) 38%, rgba(7,19,44,0) 72%),
-    linear-gradient(180deg, rgba(10,26,60,.10) 0%, rgba(10,26,60,0) 40%, rgba(7,19,44,.70) 88%); }
+    radial-gradient(135% 72% at 50% 122%, rgba(7,19,44,.97) 40%, rgba(7,19,44,0) 76%),
+    linear-gradient(180deg, rgba(10,26,60,.08) 0%, rgba(10,26,60,0) 34%, rgba(7,19,44,.55) 66%, rgba(7,19,44,.92) 100%); }
 .hero .title { position: absolute; inset-inline: 0; bottom: clamp(10px, 3vw, 26px); text-align: center; pointer-events: none; }
 .hero h1 {
   font-size: var(--fs-display); margin: 0; line-height: 1.25; letter-spacing: .5px;

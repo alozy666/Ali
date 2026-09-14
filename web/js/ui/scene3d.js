@@ -150,13 +150,13 @@ WKM.Scene3D = (function () {
     scene.fog = new THREE.Fog(NAVY, 22, 62);
 
     var camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 160);
-    camera.position.set(0.2, 3.1, 9.6);
-    camera.lookAt(-0.3, 1.9, -18);
+    camera.position.set(0.2, 3.5, 9.2);
+    camera.lookAt(-0.3, 1.35, -18);
 
     scene.add(new THREE.AmbientLight(0x6E86B8, 0.55));
     var key = new THREE.DirectionalLight(0xFFE9B0, 1.15);
     key.position.set(4, 8, 6); scene.add(key);
-    var glowNear = new THREE.PointLight(GOLD, 2.6, 14); glowNear.position.set(3.1, 2.4, 1.4); scene.add(glowNear);
+    var glowNear = new THREE.PointLight(GOLD, 2.6, 14); glowNear.position.set(4.6, 2.4, 0.2); scene.add(glowNear);
     var glowFar = new THREE.PointLight(GOLD_SOFT, 7.5, 40); glowFar.position.set(-2.6, 4.2, -22); scene.add(glowFar);
     var rim = new THREE.PointLight(0x2FA37A, 1.3, 34); rim.position.set(7, 3, -12); scene.add(rim);
 
@@ -166,12 +166,12 @@ WKM.Scene3D = (function () {
     );
     ground.rotation.x = -Math.PI / 2; scene.add(ground);
 
-    var KAABA_AT = { x: 3.1, z: 1.4 }, SHRINE_AT = { x: -2.6, z: -24 };
+    var KAABA_AT = { x: 4.6, z: 0.2 }, SHRINE_AT = { x: -2.9, z: -25 };
     var kaaba = buildKaaba(); kaaba.position.set(KAABA_AT.x, 0, KAABA_AT.z); kaaba.scale.setScalar(0.92);
     kaaba.rotation.y = -0.38; scene.add(kaaba);
     var shrine = buildShrine(); shrine.position.set(SHRINE_AT.x, 0, SHRINE_AT.z); shrine.scale.setScalar(1.65);
     shrine.rotation.y = 0.28; scene.add(shrine);
-    var astro = buildAstrolabe(); astro.position.set(4.6, 5.4, -9); astro.scale.setScalar(1.25); scene.add(astro);
+    var astro = buildAstrolabe(); astro.position.set(4.9, 5.8, -10); astro.scale.setScalar(1.3); scene.add(astro);
     var path = buildPath(620, KAABA_AT, SHRINE_AT); scene.add(path);
     var stars = buildStars(320); scene.add(stars);
 
@@ -207,9 +207,9 @@ WKM.Scene3D = (function () {
         }
         path.geometry.attributes.position.needsUpdate = true;
 
-        camera.position.y = 3.1 + Math.sin(t * 0.45) * 0.1;
+        camera.position.y = 3.5 + Math.sin(t * 0.45) * 0.1;
         camera.position.x = 0.2 + Math.sin(t * 0.2) * 0.28;
-        camera.lookAt(-0.3, 1.9, -18);
+        camera.lookAt(-0.3, 1.35, -18);
         glowFar.intensity = 7.0 + Math.sin(t * 1.2) * 1.2;
       }
       renderer.render(scene, camera);

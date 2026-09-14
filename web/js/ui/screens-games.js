@@ -50,10 +50,10 @@ WKM.GameScreens = (function () {
   function renderBidding(v) {
     var teams = WKM.State.teams();
     if (v.phase === 'bid') {
-      D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card">' +
+      D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card fx-in">' +
         head(I.get('dice') + ' مَن يزيّد؟', 'زايدوا على عدد ما تستطيعون سرده — أعلى مزايدة تلتزم بالتعداد',
              roundChip() + '<span class="chip ' + v.category.difficulty + '">' + DIFF[v.category.difficulty] + '</span>') +
-        '<p class="question">' + D.esc(v.category.title) + '</p>' +
+        '<p class="question fx-in">' + D.esc(v.category.title) + '</p>' +
         '<div class="team-list">' + teams.map(function (t) {
           return '<div class="team-row"><span class="idx">' + D.esc(t.name.slice(0, 2)) + '</span>' +
             '<span style="flex:1;min-width:0">' + D.esc(t.name) + '</span>' +
@@ -66,11 +66,13 @@ WKM.GameScreens = (function () {
           I.get('check') + ' اعتمد المزايدة وابدأ التعداد</button></div>' +
         '<div id="bid-msg"></div></div></div>';
       D.show('sc-play');
+      WKM.FX.enter('#sc-play .fx-in', { scale: true });
+      WKM.FX.enter('#sc-play .team-row', { stagger: 60, delay: 150 });
       return;
     }
     // طور التعداد
     var team = WKM.State.team(v.winner);
-    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card">' +
+    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card fx-in">' +
       head(I.get('flag') + ' ' + D.esc(team.name), 'التزم بتعداد ' + v.bid + ' عنصراً خلال ' +
            cfg.timers.bidding_count + ' ثانية', roundChip() + timerMarkup()) +
       '<p class="question">' + D.esc(v.category.title) + '</p>' +
@@ -81,6 +83,7 @@ WKM.GameScreens = (function () {
         '<button class="btn" id="bid-stop">' + I.get('flag') + ' أنهيت التعداد</button></div>' +
       '</div></div>';
     D.show('sc-play');
+    WKM.FX.enter('#sc-play .fx-in', { scale: true });
     timer.start(cfg.timers.bidding_count);
     var inp = D.$('#bid-entry'); if (inp) inp.focus();
   }
@@ -114,6 +117,10 @@ WKM.GameScreens = (function () {
     card.insertAdjacentHTML('beforeend', box);
     D.$$('#bid-entry, #bid-add, #bid-stop').forEach(function (e) { e.disabled = true; });
     if (WKM.Sound) (res.success ? WKM.Sound.correct() : WKM.Sound.wrong());
+    if (res.success) { WKM.FX.confetti({ count: 80, duration: 1900 });
+      WKM.FX.floatPoints('+' + res.points, D.$('#sc-play .card')); }
+    else WKM.FX.shake(D.$('#sc-play .card'));
+    WKM.FX.enter('#sc-play .reveal', { from: 'down', duration: 420 });
   }
 
   /* ═══════════ لَمِّح إليّ ═══════════ */
@@ -131,7 +138,7 @@ WKM.GameScreens = (function () {
         (blocked ? ' (جرّب)' : '') + '</button>';
     }).join('');
 
-    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card">' +
+    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card fx-in">' +
       head(I.get('bulb') + ' لَمِّح إليّ', 'الأسرع في الاستنتاج الصحيح يحصد ' + v.points + ' نقطة',
            roundChip() + '<span class="chip ' + v.difficulty + '">' + DIFF[v.difficulty] + '</span>' + timerMarkup()) +
       '<div class="options">' + kw + '</div>' +
@@ -151,6 +158,8 @@ WKM.GameScreens = (function () {
               ' تلميح إضافي (−' + cfg.points.hint.extra_hint_penalty + ')</button>' : '')) +
       '</div></div></div>';
     D.show('sc-play');
+    WKM.FX.enter('#sc-play .fx-in', { scale: true });
+    WKM.FX.enter('#sc-play .options .opt', { stagger: 90, delay: 120 });
     if (!timer.isRunning()) timer.start(cfg.timers.hint);
   }
 
@@ -166,6 +175,10 @@ WKM.GameScreens = (function () {
         srcLine(res.card.source) + nextBtn() + '</div>');
     D.$$('.buzz, .hint-judge, #reveal-kw, #extra-hint').forEach(function (e) { e.disabled = true; });
     if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
+    if (res.correct) { WKM.FX.confetti({ count: 70, duration: 1800 });
+      WKM.FX.floatPoints('+' + res.points, D.$('#sc-play .card')); }
+    else WKM.FX.shake(D.$('#sc-play .card'));
+    WKM.FX.enter('#sc-play .reveal', { from: 'down', duration: 420 });
   }
 
   /* ═══════════ اسأل وجاوب ═══════════ */
@@ -197,17 +210,19 @@ WKM.GameScreens = (function () {
     }).join('');
 
     var origin = v.from === 'journey' ? 'سؤال محطة' : 'سؤال مباشر';
-    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card">' +
+    D.$('#sc-play').innerHTML = '<div class="wrap"><div class="card fx-in">' +
       head(I.get('flag') + ' ' + D.esc(v.team.name), origin + ' — ' + cfg.title,
            roundChip() + '<span class="chip ' + v.difficulty + '">' + DIFF[v.difficulty] + ' · ' + v.points + ' نقطة</span>' +
            timerMarkup()) +
-      '<p class="question">' + D.esc(q.text) + '</p>' + body +
+      '<p class="question fx-in">' + D.esc(q.text) + '</p>' + body +
       (v.hintShown ? '<div class="reveal"><strong>مساعدة:</strong> ' + D.esc(v.hint) +
         ' <span class="mini">(+30 ثانية)</span></div>' : '') +
       '<div class="cards-bar" id="qa-cards"><div class="label">كروت ' + D.esc(v.team.name) +
         ' (كل كرت مرة واحدة):</div>' + cards + '<div id="qa-msg"></div></div>' +
       '</div></div>';
     D.show('sc-play');
+    WKM.FX.enter('#sc-play .fx-in', { scale: true });
+    WKM.FX.enter('#sc-play .qa-opt, #sc-play .qa-verdict', { stagger: 55, delay: 160 });
     if (!timer.isRunning()) timer.start(cfg.timers.question + (v.extraTime || 0));
   }
 
@@ -226,6 +241,12 @@ WKM.GameScreens = (function () {
     }
     D.$$('.qa-verdict, .qa-card').forEach(function (b) { b.disabled = true; });
     if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
+    var qcard = D.$('#sc-play .card');
+    if (res.correct) {
+      var hit = D.$('#sc-play .qa-opt.correct') || qcard;
+      WKM.FX.glow(hit); WKM.FX.floatPoints('+' + res.points, hit);
+    } else WKM.FX.shake(qcard);
+    WKM.FX.enter('#sc-play .reveal', { from: 'down', duration: 420 });
     var who = res.awardedTo ? WKM.State.team(res.awardedTo) : null;
     D.$('#sc-play .card').insertAdjacentHTML('beforeend',
       '<div class="reveal ' + (res.correct ? 'good' : 'bad') + '">' +

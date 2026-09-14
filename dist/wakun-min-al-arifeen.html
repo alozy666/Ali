@@ -362,10 +362,56 @@ button, input { font-family: inherit; font-size: inherit; color: inherit; }
                            transition-duration: .01ms !important; }
 }
 
+/* ── M8: الشريط العلوي والشعار والنتائج والصوت ── */
+.topbar { align-items: center; }
+.topbar .spacer { flex: 1; }
+.topbar .brand { display: inline-flex; align-items: center; }
+.topbar .brand .emblem { width: 34px; height: 34px; }
+#mute-toggle .off { display: none; }
+#mute-toggle.muted .on { display: none; }
+#mute-toggle.muted .off { display: inline; color: var(--color-danger); }
+
+.winner .emblem { width: clamp(72px, 12vw, 104px); height: auto;
+                  filter: drop-shadow(0 0 22px rgba(212,175,55,.45)); }
+.winner .sub-t { color: var(--color-on-muted); font-size: var(--fs-small); margin-top: var(--sp-3); }
+
+.results-list { display: grid; gap: var(--sp-3); margin-top: var(--sp-4); }
+.result-row { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4); }
+.result-row.champ { border-color: var(--color-border-strong); box-shadow: var(--shadow-gold); }
+.result-row .rank { width: 2.8rem; height: 2.8rem; flex: none; display: grid; place-items: center;
+  border-radius: 50%; background: var(--color-muted); border: 1px solid var(--color-border);
+  color: var(--color-heading); font-weight: 700; font-family: var(--font-head); }
+.result-row .rank .ic { width: 1.5rem; height: 1.5rem; }
+.result-row .who2 { flex: 1; min-width: 0; }
+.result-row .nm { font-weight: 700; font-size: 1.15rem; color: var(--color-on-surface); }
+.result-row .meta { color: var(--color-on-muted); font-size: var(--fs-small); }
+.result-row .pts2 { font-family: var(--font-head); font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700; color: var(--color-primary); flex: none; }
+.result-row .bar { height: 6px; border-radius: 99px; background: var(--timer-track); margin-top: .5rem; overflow: hidden; }
+.result-row .bar span { display: block; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--gold-500), var(--gold-300)); }
+
+@media (max-width: 480px) {
+  .result-row { gap: var(--sp-2); padding: var(--sp-3); }
+  .result-row .rank { width: 2.2rem; height: 2.2rem; }
+}
+
 </style>
 </head>
 <body>
 <div class="topbar">
+  <span class="brand" id="brand"></span>
+  <span class="spacer"></span>
+  <button class="icon-btn" id="mute-toggle" title="كتم الصوت" aria-label="كتم الصوت" aria-pressed="false">
+    <svg class="ic on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+    </svg>
+    <svg class="ic off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+    </svg>
+  </button>
   <button class="icon-btn" id="theme-toggle" title="تبديل الوضع الليلي والنهاري" aria-label="تبديل السمة">
     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -756,6 +802,7 @@ WKM.State = (function () {
       stationIndex: 0,
       stationProgress: {},
       log: [],
+      cardGames: ['journey', 'qa'],   /* أي مجموعات كروت تخصّ هذه الجلسة */
       startedAt: new Date().toISOString(),
       finished: false
     };
@@ -812,6 +859,47 @@ WKM.State = (function () {
     return s.teams.every(function (t) { return (s.stationProgress[st.id + ':' + t.id] || 0) >= per; });
   }
 
+  /* تفصيل النقاط لكل فريق حسب المحطة — تُستخدم في شاشة النتائج */
+  function byStation() {
+    var out = {};
+    s.teams.forEach(function (t) { out[t.id] = {}; });
+    s.log.forEach(function (e) {
+      var r = e.reason || '';
+      var stationId = null;
+      if (r.indexOf('/') !== -1) stationId = r.split('/')[0];
+      else if (r.indexOf(':bonus') !== -1) stationId = r.split(':')[0];
+      if (!stationId || !out[e.teamId]) return;
+      out[e.teamId][stationId] = (out[e.teamId][stationId] || 0) + e.points;
+    });
+    return out;
+  }
+
+  function bestStation(teamId) {
+    var m = byStation()[teamId] || {}, best = null;
+    Object.keys(m).forEach(function (k) { if (!best || m[k] > m[best]) best = k; });
+    if (!best) return null;
+    var st = config.stations.filter(function (x) { return x.id === best; })[0];
+    return { id: best, name: st ? st.name : best, points: m[best] };
+  }
+
+  function accuracy(team) {
+    return team.stats.asked ? Math.round((team.stats.correct / team.stats.asked) * 100) : 0;
+  }
+
+  /* الكروت غير المستخدمة، مقصورةً على مجموعات الكروت التي تخصّ نمط الجلسة */
+  function unusedCards(team) {
+    var out = [];
+    var games = (s && s.cardGames) || ['journey', 'qa'];
+    games.forEach(function (game) {
+      var set = (team.cards || {})[game] || {};
+      Object.keys(set).forEach(function (c) {
+        if (set[c] > 0) out.push({ game: game, id: c, label: WKM.Cards.LABELS[c] });
+      });
+    });
+    return out;
+  }
+  function setCardGames(list) { if (s) s.cardGames = list || []; }
+
   function exportJSON() { return JSON.stringify({ state: s, used: WKM.Dedupe.exportJSON() }); }
   function importJSON(json) {
     try {
@@ -824,7 +912,9 @@ WKM.State = (function () {
   return { init: init, get: get, teams: teams, team: team, current: current, nextTurn: nextTurn,
            opponentOf: opponentOf, award: award, record: record, standings: standings, isTie: isTie,
            station: station, advanceStation: advanceStation, markStationQuestion: markStationQuestion,
-           stationDone: stationDone, exportJSON: exportJSON, importJSON: importJSON };
+           stationDone: stationDone, exportJSON: exportJSON, importJSON: importJSON,
+           byStation: byStation, bestStation: bestStation, accuracy: accuracy,
+           unusedCards: unusedCards, setCardGames: setCardGames };
 })();
 
 ;
@@ -862,7 +952,234 @@ WKM.Icons = (function () {
     return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
            'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
   }
-  return { get: get, names: Object.keys(P) };
+  /* شعار اللعبة: حلقة إسطرلاب تحيط بقبّة ذهبية يصعد إليها طريق من نور */
+  function emblem(size, id) {
+    var g = 'g' + (id || Math.random().toString(36).slice(2, 7));
+    var s = size || 88;
+    return '<svg class="emblem" width="' + s + '" height="' + s + '" viewBox="0 0 100 100" ' +
+      'fill="none" aria-hidden="true">' +
+      '<defs><linearGradient id="' + g + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#F0D98A"/><stop offset="55%" stop-color="#D4AF37"/>' +
+        '<stop offset="100%" stop-color="#8B6D18"/></linearGradient></defs>' +
+      '<circle cx="50" cy="50" r="44" stroke="url(#' + g + ')" stroke-width="2.2" opacity=".85"/>' +
+      '<ellipse cx="50" cy="50" rx="44" ry="17" stroke="url(#' + g + ')" stroke-width="1.3" opacity=".45"/>' +
+      '<ellipse cx="50" cy="50" rx="17" ry="44" stroke="url(#' + g + ')" stroke-width="1.3" opacity=".3"/>' +
+      '<path d="M50 24c-9 6-13 13-13 20h26c0-7-4-14-13-20z" fill="url(#' + g + ')"/>' +
+      '<rect x="35" y="44" width="30" height="4" rx="1.6" fill="url(#' + g + ')"/>' +
+      '<rect x="38" y="48" width="24" height="16" rx="2" fill="url(#' + g + ')" opacity=".55"/>' +
+      '<path d="M50 18v6" stroke="url(#' + g + ')" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="16" r="2.4" fill="url(#' + g + ')"/>' +
+      '<g fill="url(#' + g + ')">' +
+        '<circle cx="28" cy="72" r="2.6"/><circle cx="37" cy="69" r="2.1"/>' +
+        '<circle cx="46" cy="67" r="1.7"/><circle cx="55" cy="67" r="1.7"/>' +
+        '<circle cx="64" cy="69" r="2.1"/><circle cx="73" cy="72" r="2.6"/>' +
+      '</g></svg>';
+  }
+
+  return { get: get, emblem: emblem, names: Object.keys(P) };
+})();
+
+;
+/* js/ui/sound.js */
+/* مؤثرات صوتية مولَّدة برمجياً عبر Web Audio — بلا ملفات صوتية ولا زيادة في حجم الملف */
+window.WKM = window.WKM || {};
+WKM.Sound = (function () {
+  var ctx = null, muted = false, ready = false;
+
+  try { muted = window.localStorage.getItem('wkm.muted') === '1'; } catch (e) {}
+
+  function ensure() {
+    if (ctx || muted) return ctx;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+      ready = true;
+    } catch (e) { ctx = null; }
+    return ctx;
+  }
+
+  /* نغمة واحدة: تردد، مدة، شكل الموجة، وقت البدء، وشدّة */
+  function tone(freq, dur, type, at, gain) {
+    var c = ensure();
+    if (!c || muted) return;
+    var t0 = c.currentTime + (at || 0);
+    var osc = c.createOscillator(), g = c.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain || 0.18, t0 + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g); g.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+
+  function resume() { var c = ensure(); if (c && c.state === 'suspended') { try { c.resume(); } catch (e) {} } }
+
+  return {
+    unlock: resume,
+    tick:    function () { tone(880, 0.06, 'sine', 0, 0.07); },
+    warn:    function () { tone(660, 0.12, 'square', 0, 0.12); tone(660, 0.12, 'square', 0.18, 0.12); },
+    correct: function () { tone(659.25, 0.13, 'sine', 0); tone(783.99, 0.13, 'sine', 0.11); tone(1046.5, 0.24, 'sine', 0.22); },
+    wrong:   function () { tone(196, 0.20, 'sawtooth', 0, 0.12); tone(146.83, 0.28, 'sawtooth', 0.14, 0.11); },
+    card:    function () { tone(523.25, 0.08, 'triangle', 0, 0.12); tone(698.46, 0.10, 'triangle', 0.07, 0.12); },
+    station: function () { tone(523.25, 0.14, 'sine', 0); tone(659.25, 0.14, 'sine', 0.12); tone(783.99, 0.22, 'sine', 0.24); },
+    win:     function () {
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone(f, 0.22, 'sine', i * 0.14, 0.2); });
+      tone(1318.5, 0.5, 'sine', 0.62, 0.16);
+    },
+    isMuted: function () { return muted; },
+    toggle:  function () {
+      muted = !muted;
+      try { window.localStorage.setItem('wkm.muted', muted ? '1' : '0'); } catch (e) {}
+      if (!muted) { ensure(); resume(); tone(880, 0.09, 'sine', 0, 0.12); }
+      return muted;
+    }
+  };
+})();
+
+;
+/* js/ui/share.js */
+/* تصدير نتيجة الجلسة: نصّاً للنسخ، وصورةً PNG قابلة للمشاركة */
+window.WKM = window.WKM || {};
+WKM.Share = (function () {
+  var SIG_EN = 'by Mohamed Almseeh', SIG_AR = 'إعداد: محمد المسيح';
+
+  function summaryText() {
+    var st = WKM.State.standings();
+    var L = ['🏆 نتيجة جلسة «وَكُن مِنَ العارِفِينَ»', ''];
+    st.forEach(function (t, i) {
+      var medal = ['🥇', '🥈', '🥉'][i] || '▫️';
+      L.push(medal + ' ' + t.name + ' — ' + t.score + ' نقطة' +
+             ' (دقة ' + WKM.State.accuracy(t) + '٪ · ' + t.stats.correct + ' صحيحة من ' + t.stats.asked + ')');
+      var best = WKM.State.bestStation(t.id);
+      if (best) L.push('     أفضل محطة: ' + best.name + ' (' + best.points + ' نقطة)');
+      var un = WKM.State.unusedCards(t);
+      if (un.length) L.push('     كروت لم تُستخدم: ' + un.map(function (c) { return c.label; }).join(' · '));
+    });
+    L.push('', SIG_EN, SIG_AR);
+    return L.join('\n');
+  }
+
+  function copyText() {
+    var text = summaryText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }).catch(function () { return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+  function legacyCopy(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  /* يرسم بطاقة نتيجة على canvas ويُنزّلها PNG */
+  function drawCard() {
+    var teams = WKM.State.standings().slice(0, 6);
+    var W = 1080, H = Math.max(900, 470 + teams.length * 152 + 210);
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    var FH = "700 54px 'Noto Naskh Arabic', serif";
+    var FB = "400 30px 'Noto Sans Arabic', sans-serif";
+    var FBB = "700 34px 'Noto Sans Arabic', sans-serif";
+
+    var grd = x.createLinearGradient(0, 0, W, H);
+    grd.addColorStop(0, '#0A1A3C'); grd.addColorStop(0.55, '#0B3D2E'); grd.addColorStop(1, '#07132C');
+    x.fillStyle = grd; x.fillRect(0, 0, W, H);
+
+    var glow = x.createRadialGradient(W * 0.5, 240, 20, W * 0.5, 240, 520);
+    glow.addColorStop(0, 'rgba(212,175,55,.22)'); glow.addColorStop(1, 'rgba(212,175,55,0)');
+    x.fillStyle = glow; x.fillRect(0, 0, W, 640);
+
+    x.strokeStyle = 'rgba(212,175,55,.45)'; x.lineWidth = 3;
+    x.strokeRect(34, 34, W - 68, H - 68);
+
+    x.direction = 'rtl'; x.textAlign = 'center';
+
+    /* الشعار: حلقة وقبّة */
+    x.save();
+    x.translate(W / 2, 168);
+    x.strokeStyle = '#D4AF37'; x.lineWidth = 3.4;
+    x.beginPath(); x.arc(0, 0, 62, 0, Math.PI * 2); x.stroke();
+    x.globalAlpha = 0.5;
+    x.beginPath(); x.ellipse(0, 0, 62, 23, 0, 0, Math.PI * 2); x.stroke();
+    x.globalAlpha = 1;
+    x.fillStyle = '#D4AF37';
+    x.beginPath(); x.moveTo(0, -34); x.quadraticCurveTo(-20, -10, -19, 6);
+    x.lineTo(19, 6); x.quadraticCurveTo(20, -10, 0, -34); x.fill();
+    x.fillRect(-24, 10, 48, 6);
+    x.globalAlpha = 0.55; x.fillRect(-19, 20, 38, 24); x.globalAlpha = 1;
+    x.restore();
+
+    x.fillStyle = '#E8C96A'; x.font = FH;
+    x.fillText('وَكُن مِنَ العارِفِينَ', W / 2, 300);
+    x.fillStyle = 'rgba(245,239,224,.72)'; x.font = FB;
+    x.fillText('نتيجة الجلسة', W / 2, 352);
+
+    var y = 440;
+    teams.forEach(function (t, i) {
+      var lead = i === 0;
+      x.fillStyle = lead ? 'rgba(212,175,55,.14)' : 'rgba(255,255,255,.045)';
+      roundRect(x, 70, y, W - 140, 132, 18); x.fill();
+      x.strokeStyle = lead ? 'rgba(212,175,55,.65)' : 'rgba(212,175,55,.2)'; x.lineWidth = 2;
+      roundRect(x, 70, y, W - 140, 132, 18); x.stroke();
+
+      x.textAlign = 'right';
+      x.fillStyle = lead ? '#F0D98A' : '#F5EFE0'; x.font = FBB;
+      x.fillText((i + 1) + '. ' + t.name, W - 110, y + 52);
+      x.fillStyle = 'rgba(245,239,224,.66)'; x.font = "400 26px 'Noto Sans Arabic', sans-serif";
+      var best = WKM.State.bestStation(t.id);
+      x.fillText('دقة ' + WKM.State.accuracy(t) + '٪ · ' + t.stats.correct + ' صحيحة من ' + t.stats.asked +
+                 (best ? ' · أفضل محطة: ' + best.name : ''), W - 110, y + 96);
+
+      x.textAlign = 'left';
+      x.fillStyle = '#D4AF37'; x.font = "700 62px 'Noto Naskh Arabic', serif";
+      x.fillText(String(t.score), 110, y + 82);
+      y += 152;
+    });
+
+    x.textAlign = 'center';
+    x.fillStyle = 'rgba(212,175,55,.92)'; x.font = "400 28px 'Noto Sans Arabic', sans-serif";
+    x.fillText(SIG_EN, W / 2, H - 96);
+    x.fillText(SIG_AR, W / 2, H - 56);
+    return c;
+  }
+
+  function roundRect(x, a, b, w, h, r) {
+    x.beginPath();
+    x.moveTo(a + r, b); x.lineTo(a + w - r, b); x.quadraticCurveTo(a + w, b, a + w, b + r);
+    x.lineTo(a + w, b + h - r); x.quadraticCurveTo(a + w, b + h, a + w - r, b + h);
+    x.lineTo(a + r, b + h); x.quadraticCurveTo(a, b + h, a, b + h - r);
+    x.lineTo(a, b + r); x.quadraticCurveTo(a, b, a + r, b); x.closePath();
+  }
+
+  function downloadImage() {
+    var go = function () {
+      try {
+        var c = drawCard();
+        c.toBlob(function (blob) {
+          if (!blob) return;
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'wakun-result.png';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        }, 'image/png');
+        return true;
+      } catch (e) { return false; }
+    };
+    if (document.fonts && document.fonts.ready) return document.fonts.ready.then(go);
+    return Promise.resolve(go());
+  }
+
+  return { summaryText: summaryText, copyText: copyText, downloadImage: downloadImage, drawCard: drawCard };
 })();
 
 ;
@@ -1167,7 +1484,7 @@ WKM.Screens = (function () {
     };
     timer = WKM.Timer.create({
       onTick: paintTimer,
-      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); },
+      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); if (WKM.Sound) WKM.Sound.warn(); },
       onEnd: function () { onAnswer(-1, true); },
       warnAt: cfg.timers.warn_at
     });
@@ -1363,6 +1680,7 @@ WKM.Screens = (function () {
           I.get('play') + ' التالي</button></div>' +
       '</div>';
     D.$$('#cards-bar .helpcard').forEach(function (b) { b.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ───────── لوحة النقاط بين المحطات ───────── */
@@ -1389,6 +1707,7 @@ WKM.Screens = (function () {
         '</div>' +
       '</div>';
     D.show('sc-board');
+    if (WKM.Sound && !isEnd) WKM.Sound.station();
   }
 
   /* ───────── النتائج ───────── */
@@ -1396,21 +1715,40 @@ WKM.Screens = (function () {
   function renderResults() {
     var st = WKM.State.standings();
     var tie = WKM.State.isTie();
+    var cards = st.map(function (t, i) {
+      var best = WKM.State.bestStation(t.id);
+      var un = WKM.State.unusedCards(t);
+      var acc = WKM.State.accuracy(t);
+      return '<div class="card result-row' + (i === 0 && !tie ? ' champ' : '') + '">' +
+        '<div class="rank">' + (i === 0 && !tie ? I.get('crown') : (i + 1)) + '</div>' +
+        '<div class="who2"><div class="nm">' + D.esc(t.name) + '</div>' +
+          '<div class="meta">' + t.stats.correct + ' صحيحة · ' + t.stats.wrong + ' خاطئة · ' +
+            'دقة ' + acc + '٪' + (best ? ' · أفضل محطة: ' + D.esc(best.name) + ' (' + best.points + ')' : '') + '</div>' +
+          (un.length ? '<div class="meta">كروت لم تُستخدم: ' + D.esc(un.map(function (c) { return c.label; }).join(' · ')) + '</div>' : '') +
+          '<div class="bar"><span style="width:' + acc + '%"></span></div>' +
+        '</div>' +
+        '<div class="pts2">' + t.score + '</div></div>';
+    }).join('');
+
     E.results.innerHTML =
       '<div class="wrap">' +
-        '<div class="card winner">' +
-          I.get('crown', 'crown') +
+        '<div class="card winner">' + I.emblem(96, 'res') +
           (tie ? '<div class="name">تعادل!</div><p class="section-note">القاعدة: سؤال «موت مفاجئ» من فئة صعب حتى الحسم.</p>'
-               : '<div class="name">' + D.esc(st[0].name) + '</div><div class="pts">' + st[0].score + '</div>') +
+               : '<div class="sub-t">الفائز</div><div class="name">' + D.esc(st[0].name) + '</div>' +
+                 '<div class="pts">' + st[0].score + '</div>') +
         '</div>' +
-        '<div class="card" style="margin-top:var(--sp-4)">' + scoresTable() +
-          '<div class="btn-row">' +
+        '<div class="results-list">' + cards + '</div>' +
+        '<div class="card" style="margin-top:var(--sp-4)">' +
+          '<div class="btn-row" style="margin:0">' +
+            '<button class="btn" id="copy-result">' + I.get('book') + ' نسخ النتيجة</button>' +
+            '<button class="btn" id="image-result">' + I.get('star') + ' تنزيل صورة</button>' +
             '<button class="btn btn-primary" id="play-again">' + I.get('refresh') + ' جولة جديدة</button>' +
             '<button class="btn" id="go-home">' + I.get('home') + ' الشاشة الرئيسية</button>' +
-          '</div>' +
+          '</div><div id="share-msg"></div>' +
         '</div>' +
       '</div>';
     D.show('sc-results');
+    if (WKM.Sound) WKM.Sound.win();
   }
 
   /* ───────── تدفّق اللعب ───────── */
@@ -1437,6 +1775,7 @@ WKM.Screens = (function () {
   }
 
   function startJourney() {
+    WKM.State.setCardGames(['journey']);
     WKM.Journey.reset();
     step(WKM.Journey.start(cfg, WKM.State.get().seed));
   }
@@ -1464,7 +1803,7 @@ WKM.GameScreens = (function () {
     cfg = config;
     timer = WKM.Timer.create({
       onTick: paintTimer,
-      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); },
+      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); if (WKM.Sound) WKM.Sound.warn(); },
       onEnd: onTimeout,
       warnAt: cfg.timers.warn_at
     });
@@ -1567,6 +1906,7 @@ WKM.GameScreens = (function () {
     var card = D.$('#sc-play .card');
     card.insertAdjacentHTML('beforeend', box);
     D.$$('#bid-entry, #bid-add, #bid-stop').forEach(function (e) { e.disabled = true; });
+    if (WKM.Sound) (res.success ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ═══════════ لَمِّح إليّ ═══════════ */
@@ -1618,6 +1958,7 @@ WKM.GameScreens = (function () {
         '<div style="margin:.3rem 0"><strong>الإجابة:</strong> ' + D.esc(res.answer) + '</div>' +
         srcLine(res.card.source) + nextBtn() + '</div>');
     D.$$('.buzz, .hint-judge, #reveal-kw, #extra-hint').forEach(function (e) { e.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ═══════════ اسأل وجاوب ═══════════ */
@@ -1677,6 +2018,7 @@ WKM.GameScreens = (function () {
       });
     }
     D.$$('.qa-verdict, .qa-card').forEach(function (b) { b.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
     var who = res.awardedTo ? WKM.State.team(res.awardedTo) : null;
     D.$('#sc-play .card').insertAdjacentHTML('beforeend',
       '<div class="reveal ' + (res.correct ? 'good' : 'bad') + '">' +
@@ -1695,6 +2037,8 @@ WKM.GameScreens = (function () {
     flow.mode = mode; flow.round = 0;
     WKM.Bidding.reset(); WKM.Hints.reset(); WKM.QA.reset(); WKM.Mixed.reset();
     var teams = WKM.State.teams().length;
+    /* مَن يزيّد؟ ولَمِّح إليّ بلا كروت؛ واسأل وجاوب والشامل بكروت اسأل وجاوب */
+    WKM.State.setCardGames(mode === 'bidding' || mode === 'hints' ? [] : ['qa']);
     if (mode === 'bidding') flow.total = cfg.rounds.bidding;
     else if (mode === 'hints') flow.total = cfg.rounds.hints;
     else if (mode === 'qa') flow.total = teams * cfg.rounds.qa_per_team;
@@ -1840,14 +2184,16 @@ WKM.Journey = (function () {
 
     q.revealed = true;
     var pts = WKM.Score.forQuestion(q.difficulty);
+    /* سبب الإحراز: «معرّف المحطة/الصعوبة/معرّف السؤال» ليُحسب تفصيل المحطات في النتائج */
+    var reason = WKM.State.station().id + '/' + q.difficulty + '/' + q.question.id;
     var target;
     if (q.passedFrom) {
       // كرت [خليها لغيري]: صح ⟵ للمُحال إليه · خطأ ⟵ للمحوِّل
       target = WKM.Score.resolvePass(correct, q.passedFrom, q.answeringTeamId).teamId;
-      WKM.State.award(target, pts, 'pass:' + q.question.id);
+      WKM.State.award(target, pts, reason + '/pass');
     } else {
       target = correct ? q.answeringTeamId : null;
-      if (target) WKM.State.award(target, pts, q.question.id);
+      if (target) WKM.State.award(target, pts, reason);
     }
     WKM.State.record(q.answeringTeamId, correct);
     WKM.State.markStationQuestion(q.teamId);
@@ -2381,6 +2727,31 @@ WKM.Data = (function () {
     var app = D.$('#app');
 
     D.on(document, '#theme-toggle', 'click', toggleTheme);
+    D.on(document, '#mute-toggle', 'click', function (e, btn) {
+      var m = WKM.Sound.toggle();
+      btn.setAttribute('aria-pressed', m ? 'true' : 'false');
+      btn.classList.toggle('muted', m);
+      btn.title = m ? 'تشغيل الصوت' : 'كتم الصوت';
+    });
+    /* سياسة المتصفحات تمنع الصوت قبل تفاعل المستخدم */
+    document.addEventListener('pointerdown', function once() {
+      WKM.Sound.unlock();
+      document.removeEventListener('pointerdown', once);
+    });
+
+    D.on(app, '#copy-result', 'click', function () {
+      Promise.resolve(WKM.Share.copyText()).then(function (ok) {
+        var m = D.$('#share-msg');
+        if (m) m.innerHTML = '<div class="label" style="color:var(--color-' + (ok ? 'success' : 'danger') + ')">' +
+          (ok ? 'نُسخت النتيجة إلى الحافظة.' : 'تعذّر النسخ — انسخها يدوياً.') + '</div>';
+      });
+    });
+    D.on(app, '#image-result', 'click', function () {
+      Promise.resolve(WKM.Share.downloadImage()).then(function () {
+        var m = D.$('#share-msg');
+        if (m) m.innerHTML = '<div class="label" style="color:var(--color-success)">جارٍ تنزيل صورة النتيجة…</div>';
+      });
+    });
     D.on(app, '#start-game', 'click', function () { WKM.Screens.renderTeams(); D.show('sc-teams'); });
 
     D.on(app, '#add-team', 'click', function () {
@@ -2552,6 +2923,9 @@ WKM.Data = (function () {
   /* ── الإقلاع ── */
   document.addEventListener('DOMContentLoaded', function () {
     applyTheme(currentTheme());
+    var brand = D.$('#brand'); if (brand) brand.innerHTML = I.emblem(34, 'brand');
+    var mute = D.$('#mute-toggle');
+    if (mute && WKM.Sound.isMuted()) { mute.classList.add('muted'); mute.setAttribute('aria-pressed', 'true'); }
     WKM.Data.load().then(function (data) {
       cfg = data.config;
       WKM.Bank.load(data);

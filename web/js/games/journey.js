@@ -84,14 +84,16 @@ WKM.Journey = (function () {
 
     q.revealed = true;
     var pts = WKM.Score.forQuestion(q.difficulty);
+    /* سبب الإحراز: «معرّف المحطة/الصعوبة/معرّف السؤال» ليُحسب تفصيل المحطات في النتائج */
+    var reason = WKM.State.station().id + '/' + q.difficulty + '/' + q.question.id;
     var target;
     if (q.passedFrom) {
       // كرت [خليها لغيري]: صح ⟵ للمُحال إليه · خطأ ⟵ للمحوِّل
       target = WKM.Score.resolvePass(correct, q.passedFrom, q.answeringTeamId).teamId;
-      WKM.State.award(target, pts, 'pass:' + q.question.id);
+      WKM.State.award(target, pts, reason + '/pass');
     } else {
       target = correct ? q.answeringTeamId : null;
-      if (target) WKM.State.award(target, pts, q.question.id);
+      if (target) WKM.State.award(target, pts, reason);
     }
     WKM.State.record(q.answeringTeamId, correct);
     WKM.State.markStationQuestion(q.teamId);

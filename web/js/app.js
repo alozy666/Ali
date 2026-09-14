@@ -128,6 +128,31 @@
     var app = D.$('#app');
 
     D.on(document, '#theme-toggle', 'click', toggleTheme);
+    D.on(document, '#mute-toggle', 'click', function (e, btn) {
+      var m = WKM.Sound.toggle();
+      btn.setAttribute('aria-pressed', m ? 'true' : 'false');
+      btn.classList.toggle('muted', m);
+      btn.title = m ? 'تشغيل الصوت' : 'كتم الصوت';
+    });
+    /* سياسة المتصفحات تمنع الصوت قبل تفاعل المستخدم */
+    document.addEventListener('pointerdown', function once() {
+      WKM.Sound.unlock();
+      document.removeEventListener('pointerdown', once);
+    });
+
+    D.on(app, '#copy-result', 'click', function () {
+      Promise.resolve(WKM.Share.copyText()).then(function (ok) {
+        var m = D.$('#share-msg');
+        if (m) m.innerHTML = '<div class="label" style="color:var(--color-' + (ok ? 'success' : 'danger') + ')">' +
+          (ok ? 'نُسخت النتيجة إلى الحافظة.' : 'تعذّر النسخ — انسخها يدوياً.') + '</div>';
+      });
+    });
+    D.on(app, '#image-result', 'click', function () {
+      Promise.resolve(WKM.Share.downloadImage()).then(function () {
+        var m = D.$('#share-msg');
+        if (m) m.innerHTML = '<div class="label" style="color:var(--color-success)">جارٍ تنزيل صورة النتيجة…</div>';
+      });
+    });
     D.on(app, '#start-game', 'click', function () { WKM.Screens.renderTeams(); D.show('sc-teams'); });
 
     D.on(app, '#add-team', 'click', function () {
@@ -299,6 +324,9 @@
   /* ── الإقلاع ── */
   document.addEventListener('DOMContentLoaded', function () {
     applyTheme(currentTheme());
+    var brand = D.$('#brand'); if (brand) brand.innerHTML = I.emblem(34, 'brand');
+    var mute = D.$('#mute-toggle');
+    if (mute && WKM.Sound.isMuted()) { mute.classList.add('muted'); mute.setAttribute('aria-pressed', 'true'); }
     WKM.Data.load().then(function (data) {
       cfg = data.config;
       WKM.Bank.load(data);

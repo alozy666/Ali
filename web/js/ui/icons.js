@@ -31,5 +31,29 @@ WKM.Icons = (function () {
     return '<svg class="ic ' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
            'stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
   }
-  return { get: get, names: Object.keys(P) };
+  /* شعار اللعبة: حلقة إسطرلاب تحيط بقبّة ذهبية يصعد إليها طريق من نور */
+  function emblem(size, id) {
+    var g = 'g' + (id || Math.random().toString(36).slice(2, 7));
+    var s = size || 88;
+    return '<svg class="emblem" width="' + s + '" height="' + s + '" viewBox="0 0 100 100" ' +
+      'fill="none" aria-hidden="true">' +
+      '<defs><linearGradient id="' + g + '" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#F0D98A"/><stop offset="55%" stop-color="#D4AF37"/>' +
+        '<stop offset="100%" stop-color="#8B6D18"/></linearGradient></defs>' +
+      '<circle cx="50" cy="50" r="44" stroke="url(#' + g + ')" stroke-width="2.2" opacity=".85"/>' +
+      '<ellipse cx="50" cy="50" rx="44" ry="17" stroke="url(#' + g + ')" stroke-width="1.3" opacity=".45"/>' +
+      '<ellipse cx="50" cy="50" rx="17" ry="44" stroke="url(#' + g + ')" stroke-width="1.3" opacity=".3"/>' +
+      '<path d="M50 24c-9 6-13 13-13 20h26c0-7-4-14-13-20z" fill="url(#' + g + ')"/>' +
+      '<rect x="35" y="44" width="30" height="4" rx="1.6" fill="url(#' + g + ')"/>' +
+      '<rect x="38" y="48" width="24" height="16" rx="2" fill="url(#' + g + ')" opacity=".55"/>' +
+      '<path d="M50 18v6" stroke="url(#' + g + ')" stroke-width="2.4" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="16" r="2.4" fill="url(#' + g + ')"/>' +
+      '<g fill="url(#' + g + ')">' +
+        '<circle cx="28" cy="72" r="2.6"/><circle cx="37" cy="69" r="2.1"/>' +
+        '<circle cx="46" cy="67" r="1.7"/><circle cx="55" cy="67" r="1.7"/>' +
+        '<circle cx="64" cy="69" r="2.1"/><circle cx="73" cy="72" r="2.6"/>' +
+      '</g></svg>';
+  }
+
+  return { get: get, emblem: emblem, names: Object.keys(P) };
 })();

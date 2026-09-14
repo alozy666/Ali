@@ -10,7 +10,7 @@ WKM.GameScreens = (function () {
     cfg = config;
     timer = WKM.Timer.create({
       onTick: paintTimer,
-      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); },
+      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); if (WKM.Sound) WKM.Sound.warn(); },
       onEnd: onTimeout,
       warnAt: cfg.timers.warn_at
     });
@@ -113,6 +113,7 @@ WKM.GameScreens = (function () {
     var card = D.$('#sc-play .card');
     card.insertAdjacentHTML('beforeend', box);
     D.$$('#bid-entry, #bid-add, #bid-stop').forEach(function (e) { e.disabled = true; });
+    if (WKM.Sound) (res.success ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ═══════════ لَمِّح إليّ ═══════════ */
@@ -164,6 +165,7 @@ WKM.GameScreens = (function () {
         '<div style="margin:.3rem 0"><strong>الإجابة:</strong> ' + D.esc(res.answer) + '</div>' +
         srcLine(res.card.source) + nextBtn() + '</div>');
     D.$$('.buzz, .hint-judge, #reveal-kw, #extra-hint').forEach(function (e) { e.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ═══════════ اسأل وجاوب ═══════════ */
@@ -223,6 +225,7 @@ WKM.GameScreens = (function () {
       });
     }
     D.$$('.qa-verdict, .qa-card').forEach(function (b) { b.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
     var who = res.awardedTo ? WKM.State.team(res.awardedTo) : null;
     D.$('#sc-play .card').insertAdjacentHTML('beforeend',
       '<div class="reveal ' + (res.correct ? 'good' : 'bad') + '">' +
@@ -241,6 +244,8 @@ WKM.GameScreens = (function () {
     flow.mode = mode; flow.round = 0;
     WKM.Bidding.reset(); WKM.Hints.reset(); WKM.QA.reset(); WKM.Mixed.reset();
     var teams = WKM.State.teams().length;
+    /* مَن يزيّد؟ ولَمِّح إليّ بلا كروت؛ واسأل وجاوب والشامل بكروت اسأل وجاوب */
+    WKM.State.setCardGames(mode === 'bidding' || mode === 'hints' ? [] : ['qa']);
     if (mode === 'bidding') flow.total = cfg.rounds.bidding;
     else if (mode === 'hints') flow.total = cfg.rounds.hints;
     else if (mode === 'qa') flow.total = teams * cfg.rounds.qa_per_team;

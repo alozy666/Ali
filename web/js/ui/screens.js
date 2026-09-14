@@ -13,7 +13,7 @@ WKM.Screens = (function () {
     };
     timer = WKM.Timer.create({
       onTick: paintTimer,
-      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); },
+      onWarn: function () { var t = D.$('#timer'); if (t) t.classList.add('warn'); if (WKM.Sound) WKM.Sound.warn(); },
       onEnd: function () { onAnswer(-1, true); },
       warnAt: cfg.timers.warn_at
     });
@@ -209,6 +209,7 @@ WKM.Screens = (function () {
           I.get('play') + ' التالي</button></div>' +
       '</div>';
     D.$$('#cards-bar .helpcard').forEach(function (b) { b.disabled = true; });
+    if (WKM.Sound) (res.correct ? WKM.Sound.correct() : WKM.Sound.wrong());
   }
 
   /* ───────── لوحة النقاط بين المحطات ───────── */
@@ -235,6 +236,7 @@ WKM.Screens = (function () {
         '</div>' +
       '</div>';
     D.show('sc-board');
+    if (WKM.Sound && !isEnd) WKM.Sound.station();
   }
 
   /* ───────── النتائج ───────── */
@@ -242,21 +244,40 @@ WKM.Screens = (function () {
   function renderResults() {
     var st = WKM.State.standings();
     var tie = WKM.State.isTie();
+    var cards = st.map(function (t, i) {
+      var best = WKM.State.bestStation(t.id);
+      var un = WKM.State.unusedCards(t);
+      var acc = WKM.State.accuracy(t);
+      return '<div class="card result-row' + (i === 0 && !tie ? ' champ' : '') + '">' +
+        '<div class="rank">' + (i === 0 && !tie ? I.get('crown') : (i + 1)) + '</div>' +
+        '<div class="who2"><div class="nm">' + D.esc(t.name) + '</div>' +
+          '<div class="meta">' + t.stats.correct + ' صحيحة · ' + t.stats.wrong + ' خاطئة · ' +
+            'دقة ' + acc + '٪' + (best ? ' · أفضل محطة: ' + D.esc(best.name) + ' (' + best.points + ')' : '') + '</div>' +
+          (un.length ? '<div class="meta">كروت لم تُستخدم: ' + D.esc(un.map(function (c) { return c.label; }).join(' · ')) + '</div>' : '') +
+          '<div class="bar"><span style="width:' + acc + '%"></span></div>' +
+        '</div>' +
+        '<div class="pts2">' + t.score + '</div></div>';
+    }).join('');
+
     E.results.innerHTML =
       '<div class="wrap">' +
-        '<div class="card winner">' +
-          I.get('crown', 'crown') +
+        '<div class="card winner">' + I.emblem(96, 'res') +
           (tie ? '<div class="name">تعادل!</div><p class="section-note">القاعدة: سؤال «موت مفاجئ» من فئة صعب حتى الحسم.</p>'
-               : '<div class="name">' + D.esc(st[0].name) + '</div><div class="pts">' + st[0].score + '</div>') +
+               : '<div class="sub-t">الفائز</div><div class="name">' + D.esc(st[0].name) + '</div>' +
+                 '<div class="pts">' + st[0].score + '</div>') +
         '</div>' +
-        '<div class="card" style="margin-top:var(--sp-4)">' + scoresTable() +
-          '<div class="btn-row">' +
+        '<div class="results-list">' + cards + '</div>' +
+        '<div class="card" style="margin-top:var(--sp-4)">' +
+          '<div class="btn-row" style="margin:0">' +
+            '<button class="btn" id="copy-result">' + I.get('book') + ' نسخ النتيجة</button>' +
+            '<button class="btn" id="image-result">' + I.get('star') + ' تنزيل صورة</button>' +
             '<button class="btn btn-primary" id="play-again">' + I.get('refresh') + ' جولة جديدة</button>' +
             '<button class="btn" id="go-home">' + I.get('home') + ' الشاشة الرئيسية</button>' +
-          '</div>' +
+          '</div><div id="share-msg"></div>' +
         '</div>' +
       '</div>';
     D.show('sc-results');
+    if (WKM.Sound) WKM.Sound.win();
   }
 
   /* ───────── تدفّق اللعب ───────── */
@@ -283,6 +304,7 @@ WKM.Screens = (function () {
   }
 
   function startJourney() {
+    WKM.State.setCardGames(['journey']);
     WKM.Journey.reset();
     step(WKM.Journey.start(cfg, WKM.State.get().seed));
   }

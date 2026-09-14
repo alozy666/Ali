@@ -19,6 +19,7 @@ WKM.State = (function () {
       stationIndex: 0,
       stationProgress: {},
       log: [],
+      cardGames: ['journey', 'qa'],   /* أي مجموعات كروت تخصّ هذه الجلسة */
       startedAt: new Date().toISOString(),
       finished: false
     };
@@ -75,6 +76,47 @@ WKM.State = (function () {
     return s.teams.every(function (t) { return (s.stationProgress[st.id + ':' + t.id] || 0) >= per; });
   }
 
+  /* تفصيل النقاط لكل فريق حسب المحطة — تُستخدم في شاشة النتائج */
+  function byStation() {
+    var out = {};
+    s.teams.forEach(function (t) { out[t.id] = {}; });
+    s.log.forEach(function (e) {
+      var r = e.reason || '';
+      var stationId = null;
+      if (r.indexOf('/') !== -1) stationId = r.split('/')[0];
+      else if (r.indexOf(':bonus') !== -1) stationId = r.split(':')[0];
+      if (!stationId || !out[e.teamId]) return;
+      out[e.teamId][stationId] = (out[e.teamId][stationId] || 0) + e.points;
+    });
+    return out;
+  }
+
+  function bestStation(teamId) {
+    var m = byStation()[teamId] || {}, best = null;
+    Object.keys(m).forEach(function (k) { if (!best || m[k] > m[best]) best = k; });
+    if (!best) return null;
+    var st = config.stations.filter(function (x) { return x.id === best; })[0];
+    return { id: best, name: st ? st.name : best, points: m[best] };
+  }
+
+  function accuracy(team) {
+    return team.stats.asked ? Math.round((team.stats.correct / team.stats.asked) * 100) : 0;
+  }
+
+  /* الكروت غير المستخدمة، مقصورةً على مجموعات الكروت التي تخصّ نمط الجلسة */
+  function unusedCards(team) {
+    var out = [];
+    var games = (s && s.cardGames) || ['journey', 'qa'];
+    games.forEach(function (game) {
+      var set = (team.cards || {})[game] || {};
+      Object.keys(set).forEach(function (c) {
+        if (set[c] > 0) out.push({ game: game, id: c, label: WKM.Cards.LABELS[c] });
+      });
+    });
+    return out;
+  }
+  function setCardGames(list) { if (s) s.cardGames = list || []; }
+
   function exportJSON() { return JSON.stringify({ state: s, used: WKM.Dedupe.exportJSON() }); }
   function importJSON(json) {
     try {
@@ -87,5 +129,7 @@ WKM.State = (function () {
   return { init: init, get: get, teams: teams, team: team, current: current, nextTurn: nextTurn,
            opponentOf: opponentOf, award: award, record: record, standings: standings, isTie: isTie,
            station: station, advanceStation: advanceStation, markStationQuestion: markStationQuestion,
-           stationDone: stationDone, exportJSON: exportJSON, importJSON: importJSON };
+           stationDone: stationDone, exportJSON: exportJSON, importJSON: importJSON,
+           byStation: byStation, bestStation: bestStation, accuracy: accuracy,
+           unusedCards: unusedCards, setCardGames: setCardGames };
 })();

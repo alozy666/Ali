@@ -207,3 +207,37 @@ button, input { font-family: inherit; font-size: inherit; color: inherit; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important;
                            transition-duration: .01ms !important; }
 }
+
+/* ── M8: الشريط العلوي والشعار والنتائج والصوت ── */
+.topbar { align-items: center; }
+.topbar .spacer { flex: 1; }
+.topbar .brand { display: inline-flex; align-items: center; }
+.topbar .brand .emblem { width: 34px; height: 34px; }
+#mute-toggle .off { display: none; }
+#mute-toggle.muted .on { display: none; }
+#mute-toggle.muted .off { display: inline; color: var(--color-danger); }
+
+.winner .emblem { width: clamp(72px, 12vw, 104px); height: auto;
+                  filter: drop-shadow(0 0 22px rgba(212,175,55,.45)); }
+.winner .sub-t { color: var(--color-on-muted); font-size: var(--fs-small); margin-top: var(--sp-3); }
+
+.results-list { display: grid; gap: var(--sp-3); margin-top: var(--sp-4); }
+.result-row { display: flex; align-items: center; gap: var(--sp-4); padding: var(--sp-4); }
+.result-row.champ { border-color: var(--color-border-strong); box-shadow: var(--shadow-gold); }
+.result-row .rank { width: 2.8rem; height: 2.8rem; flex: none; display: grid; place-items: center;
+  border-radius: 50%; background: var(--color-muted); border: 1px solid var(--color-border);
+  color: var(--color-heading); font-weight: 700; font-family: var(--font-head); }
+.result-row .rank .ic { width: 1.5rem; height: 1.5rem; }
+.result-row .who2 { flex: 1; min-width: 0; }
+.result-row .nm { font-weight: 700; font-size: 1.15rem; color: var(--color-on-surface); }
+.result-row .meta { color: var(--color-on-muted); font-size: var(--fs-small); }
+.result-row .pts2 { font-family: var(--font-head); font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700; color: var(--color-primary); flex: none; }
+.result-row .bar { height: 6px; border-radius: 99px; background: var(--timer-track); margin-top: .5rem; overflow: hidden; }
+.result-row .bar span { display: block; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--gold-500), var(--gold-300)); }
+
+@media (max-width: 480px) {
+  .result-row { gap: var(--sp-2); padding: var(--sp-3); }
+  .result-row .rank { width: 2.2rem; height: 2.2rem; }
+}

@@ -210,6 +210,7 @@ by Mohamed Almseeh
 - **العشوائية قابلة للبذر (seeded)** ليتمكن الحَكَم من إعادة إنتاج جلسة.
 - **التطوير:** `python3 -m http.server 8000` ثم `http://localhost:8000/web/` — **الاختبار النهائي إلزامي عبر فتح `dist/…html` بـ`file://` مباشرةً.**
 - **التحقّق قبل كل دفع:** `node tools/validate.js` (صحة JSON + تفرّد المعرّفات + وجود المصادر + كشف التكرار).
+- **الأدوات:** `tools/stats.js` تقرير إحصائي وسعة البنك · `tools/export-bank.js` تحديث نسخة الحَكَم · `tools/embed-fonts.js` توليد الخطوط المضمّنة · `tools/test-station.js` اختبارات المحرّك.
 
 ---
 

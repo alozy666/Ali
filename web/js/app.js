@@ -28,10 +28,49 @@
           '<div class="card">' + I.get('question') + '<h3>اسأل وجاوب</h3><p>عقائد وفقه وقرآن وتاريخ، ' +
             'وكروت: خيارات، ومساعدة، وحذف إجابتين.</p></div>' +
         '</div>' +
-        '<p class="section-note" style="margin-top:var(--sp-6)">بنك الأسئلة: ' +
-          '<strong>' + WKM.Bank.stats().total + '</strong> عنصراً، كلٌّ منها موثّق بمصدره.</p>' +
+        toolsMarkup() +
       '</div>';
     mountHero();
+  }
+
+  /* أدوات الحَكَم: حالة البنك وتصفيره وتصدير الجلسة واستيرادها */
+  function toolsMarkup() {
+    var st = WKM.Bank.stats();
+    var used = st.total - st.remaining;
+    return '<div class="card" id="tools-card" style="margin-top:var(--sp-6)">' +
+      '<h3>' + I.get('book') + ' بنك الأسئلة وأدوات الحَكَم</h3>' +
+      '<p><strong style="color:var(--color-primary)">' + st.remaining + '</strong> عنصراً متاحاً من ' +
+        st.total + '، كلٌّ منها موثّق بمصدره' + (used ? ' (استُهلك ' + used + ')' : '') + '.' +
+        (WKM.Dedupe.storageAvailable() ? '' : ' <span style="color:var(--color-warning)">التخزين المحلي معطّل — السجلّ في الذاكرة فقط.</span>') + '</p>' +
+      '<div class="btn-row" style="justify-content:flex-start;margin-top:var(--sp-3)">' +
+        '<button class="btn btn-sm" id="reset-bank">' + I.get('refresh') + ' تصفير سجلّ الأسئلة المستهلكة</button>' +
+        '<button class="btn btn-sm" id="export-session">' + I.get('flag') + ' تصدير الجلسة</button>' +
+        '<label class="btn btn-sm" for="import-file">' + I.get('plus') + ' استيراد جلسة</label>' +
+        '<input type="file" id="import-file" accept="application/json,.json" hidden>' +
+      '</div><div id="tools-msg"></div></div>';
+  }
+
+  function refreshTools() {
+    var host = D.$('#tools-card');
+    if (host) host.outerHTML = toolsMarkup();
+  }
+
+  function download(name, text) {
+    try {
+      var blob = new Blob([text], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function toolsMsg(text, danger) {
+    var m = D.$('#tools-msg');
+    if (m) m.innerHTML = '<div class="label" style="color:var(--color-' + (danger ? 'danger' : 'success') + ')">' +
+      D.esc(text) + '</div>';
   }
 
   function mountHero() {
@@ -211,7 +250,40 @@
       WKM.Screens.renderTeams(WKM.State.teams().map(function (t) { return t.name; }));
       D.show('sc-teams');
     });
-    D.on(app, '#go-home', 'click', function () { D.show('sc-welcome'); });
+    D.on(app, '#go-home', 'click', function () { D.show('sc-welcome'); refreshTools(); });
+
+    /* ── أدوات الحَكَم ── */
+    D.on(app, '#reset-bank', 'click', function () {
+      if (!window.confirm('سيُمسح سجلّ الأسئلة المستهلكة ويعود البنك كاملاً. متابعة؟')) return;
+      WKM.Dedupe.reset();
+      refreshTools();
+      toolsMsg('تم تصفير السجلّ — البنك متاح كاملاً.');
+    });
+    D.on(app, '#export-session', 'click', function () {
+      var state = WKM.State.get();
+      var payload = JSON.stringify({
+        app: 'wakun-min-al-arifeen', version: cfg.version,
+        savedAt: new Date().toISOString(),
+        state: state || null, used: WKM.Dedupe.exportJSON()
+      });
+      if (download('wakun-session-' + Date.now() + '.json', payload))
+        toolsMsg('صُدّرت الجلسة إلى ملف.');
+      else toolsMsg('تعذّر التصدير في هذا المتصفح.', true);
+    });
+    app.addEventListener('change', function (e) {
+      if (!e.target || e.target.id !== 'import-file' || !e.target.files || !e.target.files[0]) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var o = JSON.parse(reader.result);
+          if (o.used) WKM.Dedupe.importJSON(o.used);
+          if (o.state) WKM.State.importJSON(JSON.stringify({ state: o.state, used: o.used }));
+          refreshTools();
+          toolsMsg('استُوردت الجلسة بنجاح.');
+        } catch (err) { toolsMsg('ملف غير صالح.', true); }
+      };
+      reader.readAsText(e.target.files[0]);
+    });
 
     D.on(app, '.helpcard[data-card]', 'click', function (e, btn) {
       if (btn.disabled) return;

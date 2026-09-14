@@ -122,6 +122,36 @@ console.log('\n  النتيجة النهائية:');
 W.State.standings().forEach((t, i) => console.log(`    ${i + 1}. ${t.name}: ${t.score} نقطة  ` +
   `(صحيحة ${t.stats.correct} / خاطئة ${t.stats.wrong})`));
 console.log(`\n  سعة البنك الحالية: رحلة كاملة تستوعب حتى ${minPer} فرق دون تكرار.`);
+
+/* اختبار M7: ثلاث جلسات رحلة كاملة متتالية بلا تكرار سؤال واحد */
+(function threeSessions() {
+  W.Dedupe.reset();
+  const seenAll = new Set();
+  let dup = 0, drawn = 0;
+  const r = W.RNG.create(99);
+  for (let session = 0; session < 3; session++) {
+    W.State.init(D.config, ['فريق أ', 'فريق ب'], 'journey', 99 + session);
+    for (let st = 0; st < D.config.stations.length; st++) {
+      const station = W.State.station();
+      for (const team of W.State.teams()) {
+        for (const diff of DIFFS) {
+          const q = W.Bank.pick({ game: 'journey', station: station.id, difficulty: diff }, r);
+          if (!q) continue;
+          drawn++;
+          if (seenAll.has(q.id)) dup++;
+          seenAll.add(q.id);
+          W.Dedupe.markUsed(q.id);
+        }
+      }
+      W.State.advanceStation();
+    }
+  }
+  assert(drawn === 126, `ثلاث جلسات تسحب 126 سؤالاً (الفعلي: ${drawn})`);
+  assert(dup === 0, `ثلاث جلسات متتالية بلا تكرار سؤال واحد (المكرر: ${dup})`);
+  console.log(`\n  M7: ثلاث جلسات متتالية — ${drawn} سؤالاً، ${dup} تكرار.`);
+  W.Dedupe.reset();
+})();
+
 console.log('─'.repeat(56));
 console.log(`  ✅ نجح ${ok.length} اختباراً` + (fails.length ? `  ❌ فشل ${fails.length}` : ''));
 if (fails.length) { fails.forEach(f => console.log('    ❌ ' + f)); }

@@ -26,7 +26,8 @@
     },
     "hint": {
       "base": 20,
-      "extra_hint_penalty": 5
+      "extra_hint_penalty": 5,
+      "first_buzz_bonus": 0
     },
     "station_bonus": 15
   },
@@ -93,5 +94,11 @@
       "order": 7,
       "theme": "الإمام علي الهادي والإمام الحسن العسكري (ع)"
     }
-  ]
+  ],
+  "rounds": {
+    "bidding": 6,
+    "hints": 8,
+    "qa_per_team": 3,
+    "mixed": 12
+  }
 }

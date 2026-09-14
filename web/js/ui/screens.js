@@ -97,14 +97,17 @@ WKM.Screens = (function () {
           '<button class="card mode" data-mode="journey">' + I.get('map') +
             '<h3>رحلة السفر الكاملة</h3><p>سبع محطات من مكة المكرمة إلى سامراء المقدسة، ' +
             '3 أسئلة لكل فريق في كل محطة، و3 كروت مساعدة.</p></button>' +
-          '<button class="card mode disabled" data-mode="bidding" disabled>' + I.get('dice') +
-            '<h3>مَن يزيّد؟ <span class="tag">M6</span></h3><p>مزاد على عدد ما تستطيع سرده، ' +
-            cfg.timers.bidding_count + ' ثانية للتعداد.</p></button>' +
-          '<button class="card mode disabled" data-mode="hints" disabled>' + I.get('bulb') +
-            '<h3>لَمِّح إليّ <span class="tag">M6</span></h3><p>ثلاث كلمات مفتاحية، والأسرع في الاستنتاج يفوز.</p></button>' +
-          '<button class="card mode disabled" data-mode="qa" disabled>' + I.get('question') +
-            '<h3>اسأل وجاوب <span class="tag">M6</span></h3><p>عقائد وفقه وقرآن وتاريخ، ' +
-            cfg.timers.question + ' ثانية للسؤال.</p></button>' +
+          '<button class="card mode" data-mode="mixed">' + I.get('star') +
+            '<h3>النمط الشامل</h3><p>' + cfg.rounds.mixed + ' جولة متنوعة عشوائياً بين الألعاب الأربع.</p></button>' +
+          '<button class="card mode" data-mode="bidding">' + I.get('dice') +
+            '<h3>مَن يزيّد؟</h3><p>مزاد على عدد ما تستطيع سرده، ' + cfg.timers.bidding_count +
+            ' ثانية للتعداد. الفشل يُحوّل النقاط للمنافس. (' + cfg.rounds.bidding + ' جولات)</p></button>' +
+          '<button class="card mode" data-mode="hints">' + I.get('bulb') +
+            '<h3>لَمِّح إليّ</h3><p>ثلاث كلمات مفتاحية، والأسرع في الاستنتاج يفوز. (' +
+            cfg.rounds.hints + ' جولات)</p></button>' +
+          '<button class="card mode" data-mode="qa">' + I.get('question') +
+            '<h3>اسأل وجاوب</h3><p>أسئلة مباشرة في العقائد والفقه والقرآن والتاريخ، ' +
+            cfg.timers.question + ' ثانية، و3 كروت. (' + cfg.rounds.qa_per_team + ' أسئلة لكل فريق)</p></button>' +
         '</div>' +
       '</div>';
   }

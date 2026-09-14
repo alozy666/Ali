@@ -112,9 +112,86 @@
     });
 
     D.on(app, '.mode', 'click', function (e, btn) {
-      if (btn.disabled || btn.dataset.mode !== 'journey') return;
-      WKM.Screens.startJourney();
+      if (btn.disabled) return;
+      if (btn.dataset.mode === 'journey') WKM.Screens.startJourney();
+      else WKM.GameScreens.startMode(btn.dataset.mode);
     });
+
+    /* ── مَن يزيّد؟ ── */
+    D.on(app, '.bid-step', 'click', function (e, btn) {
+      var id = btn.dataset.team, d = +btn.dataset.d;
+      var v = WKM.Bidding.view(); if (!v || v.phase !== 'bid') return;
+      var n = WKM.Bidding.setBid(id, (v.bids[id] || 0) + d);
+      var cell = D.$('.bid-val[data-team="' + id + '"]');
+      if (cell) cell.textContent = n;
+    });
+    D.on(app, '#lock-bids', 'click', function () {
+      var r = WKM.Bidding.lockBids();
+      if (!r.ok) { var m = D.$('#bid-msg'); if (m) m.innerHTML =
+        '<div class="label" style="color:var(--color-danger)">' + D.esc(r.reason) + '</div>'; return; }
+      WKM.GameScreens.renderBidding(r.view);
+    });
+    function bidSubmit() {
+      var inp = D.$('#bid-entry'); if (!inp || inp.disabled) return;
+      var r = WKM.Bidding.submit(inp.value);
+      inp.value = ''; inp.focus();
+      if (r.reason === 'empty') return;
+      var box = D.$('#bid-progress');
+      if (box) box.innerHTML = WKM.GameScreens.progressMarkup(r.view || WKM.Bidding.view());
+      if (r.ok && r.full) WKM.GameScreens.revealBidding(WKM.Bidding.finish());
+    }
+    D.on(app, '#bid-add', 'click', bidSubmit);
+    app.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && e.target && e.target.id === 'bid-entry') { e.preventDefault(); bidSubmit(); }
+    });
+    D.on(app, '#bid-stop', 'click', function () { WKM.GameScreens.revealBidding(WKM.Bidding.finish()); });
+
+    /* ── لَمِّح إليّ ── */
+    D.on(app, '.buzz', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      var r = WKM.Hints.buzz(btn.dataset.team);
+      if (r.ok) WKM.GameScreens.renderHints(r.view);
+    });
+    D.on(app, '.hint-judge', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      var r = WKM.Hints.judge(btn.dataset.ok === '1');
+      if (!r) return;
+      if (r.continues) WKM.GameScreens.renderHints(WKM.Hints.view());
+      else WKM.GameScreens.revealHints(r);
+    });
+    D.on(app, '#reveal-kw', 'click', function () {
+      var v = WKM.Hints.revealNext(); if (v) WKM.GameScreens.renderHints(v);
+    });
+    D.on(app, '#extra-hint', 'click', function () {
+      var v = WKM.Hints.useExtraHint(); if (v) WKM.GameScreens.renderHints(v);
+    });
+
+    /* ── اسأل وجاوب ── */
+    D.on(app, '.qa-opt', 'click', function (e, btn) {
+      if (btn.disabled || btn.classList.contains('gone')) return;
+      var v = WKM.QA.view();
+      WKM.GameScreens.revealQA(WKM.QA.answer(+btn.dataset.i), v);
+    });
+    D.on(app, '.qa-verdict', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      var v = WKM.QA.view();
+      WKM.GameScreens.revealQA(WKM.QA.answer(btn.dataset.ok === '1'), v);
+    });
+    D.on(app, '.qa-card', 'click', function (e, btn) {
+      if (btn.disabled) return;
+      var r = WKM.QA.useCard(btn.dataset.card);
+      if (!r.ok) {
+        var m = D.$('#qa-msg');
+        if (m) m.innerHTML = '<div class="label" style="color:var(--color-danger)">' + D.esc(r.reason) + '</div>';
+        return;
+      }
+      var t = WKM.GameScreens.timer();
+      if (btn.dataset.card === 'ask_help') {
+        var rem = t.remaining(); t.stop(); WKM.GameScreens.renderQA(r.view); t.start(rem + 30);
+      } else WKM.GameScreens.renderQA(r.view);
+    });
+
+    D.on(app, '#next-round', 'click', function () { WKM.GameScreens.nextRound(); });
 
     D.on(app, '.opt', 'click', function (e, btn) {
       if (btn.disabled || btn.classList.contains('gone')) return;
@@ -129,6 +206,8 @@
     D.on(app, '#to-results', 'click', function () { WKM.Screens.renderResults(); });
     D.on(app, '#play-again', 'click', function () {
       WKM.Dedupe.reset(); WKM.Journey.reset();
+      WKM.Bidding.reset(); WKM.Hints.reset(); WKM.QA.reset(); WKM.Mixed.reset();
+      WKM.GameScreens.timer().stop(); WKM.Screens.timer().stop();
       WKM.Screens.renderTeams(WKM.State.teams().map(function (t) { return t.name; }));
       D.show('sc-teams');
     });
@@ -153,6 +232,7 @@
       WKM.Bank.load(data);
       WKM.Score.init(cfg); WKM.Cards.init(cfg);
       WKM.Screens.init(cfg);
+      WKM.GameScreens.init(cfg);
       renderWelcome();
       wire();
       D.show('sc-welcome');
